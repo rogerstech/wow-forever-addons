@@ -42,7 +42,9 @@ function TF:Apply(info)
 	if not f then return end
 	local cfg = self:Cfg(info.key)
 	if not cfg.scale and not cfg.pos then return end
-	if InCombatLockdown() then
+	-- Only party/raid frames are locked in combat; the XP bar and minimap can be
+	-- put back straight away when Blizzard re-stacks them.
+	if f:IsProtected() and InCombatLockdown() then
 		pending = true
 		return
 	end
