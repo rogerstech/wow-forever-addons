@@ -15,7 +15,7 @@ They were written against Blizzard's own Forever-branch UI source.
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
-3. Start the game. At character select, open **AddOns** and make sure both are ticked
+3. Start the game. At character select, click **Menu** (top of the screen) > **AddOns** and make sure both are ticked
    (tick "Load out of date AddOns" if a patch has bumped the interface number).
 
 ## TitanBars
