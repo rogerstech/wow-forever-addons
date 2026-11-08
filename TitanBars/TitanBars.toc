@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: TitanBars
+## Notes: Bartender-style action bars: hide the Blizzard bars and art, move, resize and lay out your own bars, and bind keys by hovering.
+## Author: Adam Rogers
+## Version: 1.0.0
+## SavedVariables: TitanBarsDB
+## IconTexture: Interface\Icons\INV_Misc_Gear_01
+
+Core.lua
+Bars.lua
+Bindings.lua
+Config.lua
