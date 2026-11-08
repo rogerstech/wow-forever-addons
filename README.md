@@ -63,8 +63,9 @@ Move those in Edit Mode.
 - `/tf reset` hands everything back (then `/reload`).
 
 Once you change a frame here, TitanFrames keeps it there even if Edit Mode or a roster change
-moves it. Use Reset to let Edit Mode control it again. Party and raid frames are protected:
-changes made in combat apply as soon as combat ends.
+moves it. Use Reset to let Edit Mode control it again. Party and raid frames are protected, so
+changes you make to them during combat apply when combat ends. As a fight starts, a secure
+handler puts them back in your spot in case anything moved them.
 
 ## Notes
 

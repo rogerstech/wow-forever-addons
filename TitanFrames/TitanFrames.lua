@@ -37,11 +37,48 @@ end
 local applying = {}
 local pending = false
 
+-- Party and raid frames are locked in combat. Addons can't move them then, but a
+-- secure handler can, so this one puts them back the moment a fight starts.
+local guard = CreateFrame("Frame", "TitanFramesCombatGuard", UIParent, "SecureHandlerStateTemplate")
+guard:SetAttribute("_onstate-combat", [[
+	if newstate ~= "1" then return end
+	for i = 1, 2 do
+		local key = (i == 1) and "party" or "raid"
+		local f = self:GetFrameRef(key)
+		local x, y = self:GetAttribute(key .. "-x"), self:GetAttribute(key .. "-y")
+		local scale = self:GetAttribute(key .. "-scale")
+		if f and scale then f:SetScale(scale) end
+		if f and x and y then
+			f:ClearAllPoints()
+			-- "$screen" is the screen corner, the same spot as UIParent's.
+			f:SetPoint("TOPLEFT", "$screen", "BOTTOMLEFT", x, y)
+		end
+	end
+]])
+
+-- Hands the guard the current spot (in the frame's own units) out of combat.
+local function UpdateGuard(info, f, cfg)
+	if info.key ~= "party" and info.key ~= "raid" then return end
+	if InCombatLockdown() or not f:IsProtected() then return end
+	guard:SetFrameRef(info.key, f)
+	guard:SetAttribute(info.key .. "-scale", cfg.scale)
+	local x, y
+	if cfg.pos then
+		local rel = RelScale(f)
+		x, y = cfg.pos.x / rel, cfg.pos.y / rel
+	end
+	guard:SetAttribute(info.key .. "-x", x)
+	guard:SetAttribute(info.key .. "-y", y)
+end
+
 function TF:Apply(info)
 	local f = _G[info.name]
 	if not f then return end
 	local cfg = self:Cfg(info.key)
-	if not cfg.scale and not cfg.pos then return end
+	if not cfg.scale and not cfg.pos then
+		UpdateGuard(info, f, cfg)
+		return
+	end
 	-- Only party/raid frames are locked in combat; the XP bar and minimap can be
 	-- put back straight away when Blizzard re-stacks them.
 	if f:IsProtected() and InCombatLockdown() then
@@ -56,6 +93,7 @@ function TF:Apply(info)
 		f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", cfg.pos.x / rel, cfg.pos.y / rel)
 	end
 	applying[f] = nil
+	UpdateGuard(info, f, cfg)
 	if info.mover then self:PlaceMover(info) end
 end
 
@@ -188,6 +226,7 @@ end
 
 function TF:ResetFrame(info)
 	TitanFramesDB[info.key] = nil
+	self:Apply(info) -- clears the combat guard's copy too
 	if info.mover then self:PlaceMover(info) end
 	self:RefreshWindow()
 	self:Print(info.label .. " handed back to Blizzard. Type /reload to restore its Edit Mode spot.")
@@ -294,6 +333,7 @@ events:SetScript("OnEvent", function(_, event, arg1)
 	elseif event == "PLAYER_LOGIN" then
 		TF.ready = true
 		TF:Setup()
+		RegisterStateDriver(guard, "combat", "[combat] 1; 0")
 		if EventRegistry then
 			EventRegistry:RegisterCallback("EditMode.Exit", function() TF:ApplyAll() end, TF)
 		end
