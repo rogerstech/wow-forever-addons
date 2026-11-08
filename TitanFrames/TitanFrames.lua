@@ -73,11 +73,23 @@ local function Hook(info)
 		TF:Apply(info)
 	end
 	hooksecurefunc(f, "SetPoint", Reapply)
+	hooksecurefunc(f, "SetAllPoints", Reapply)
 	hooksecurefunc(f, "SetScale", Reapply)
+end
+
+local function ReapplyAll()
+	if EditModeActive() then return end
+	TF:ApplyAll()
 end
 
 function TF:Setup()
 	for _, info in ipairs(self.FRAMES) do Hook(info) end
+	-- Edit Mode re-stacks the XP bar (and others) above the bag bar whenever the
+	-- bottom bars change, which happens on entering combat.
+	if EditModeManagerFrame and EditModeManagerFrame.UpdateBottomActionBarPositions and not self.editModeHooked then
+		self.editModeHooked = true
+		hooksecurefunc(EditModeManagerFrame, "UpdateBottomActionBarPositions", ReapplyAll)
+	end
 	self:ApplyAll()
 end
 
@@ -289,6 +301,10 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		TF:ApplyAll()
 	elseif event == "PLAYER_REGEN_DISABLED" then
 		if TF.unlocked then TF:SetUnlocked(false) end
+		-- Catch anything Blizzard moves as combat starts, now and once it settles.
+		ReapplyAll()
+		C_Timer.After(0, ReapplyAll)
+		C_Timer.After(0.5, ReapplyAll)
 	elseif event == "PLAYER_REGEN_ENABLED" and pending then
 		pending = false
 		TF:ApplyAll()
