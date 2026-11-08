@@ -1,4 +1,4 @@
--- TitanFrames: move and resize the minimap, party frames and raid frames.
+-- TitanFrames: move and resize the minimap, party frames, raid frames and XP bar.
 -- Once you move or resize a frame here, TitanFrames owns its size and position and
 -- re-applies them whenever Blizzard (Edit Mode, roster changes) puts it back.
 local ADDON, TF = ...
@@ -8,6 +8,9 @@ TF.FRAMES = {
 	{ key = "minimap", name = "MinimapCluster",            label = "Minimap" },
 	{ key = "party",   name = "PartyFrame",                label = "Party frames" },
 	{ key = "raid",    name = "CompactRaidFrameContainer", label = "Raid frames" },
+	-- The status bars only show when there's something to track (XP, rep, honor).
+	{ key = "xp",      name = "MainStatusTrackingBarContainer",      label = "XP bar" },
+	{ key = "xp2",     name = "SecondaryStatusTrackingBarContainer", label = "Second bar (rep/honor)" },
 }
 
 local MIN_SCALE, MAX_SCALE = 0.3, 3
@@ -184,7 +187,7 @@ local refreshing = false
 
 local function BuildWindow()
 	win = CreateFrame("Frame", "TitanFramesConfig", UIParent, "BasicFrameTemplateWithInset")
-	win:SetSize(320, 300)
+	win:SetSize(320, 420)
 	win:SetPoint("CENTER")
 	win:SetFrameStrata("HIGH")
 	win:SetMovable(true)

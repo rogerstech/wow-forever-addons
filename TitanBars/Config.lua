@@ -15,7 +15,10 @@ end
 local function Percent(v) return ("%d%%"):format(v * 100 + 0.5) end
 local function Whole(v) return tostring(math.floor(v + 0.5)) end
 
-local function MakeSlider(parent, label, minV, maxV, step, fmt, y, field)
+-- source returns the settings table to edit (the selected bar by default);
+-- fallback gives the value to show when the setting isn't set yet.
+local function MakeSlider(parent, label, minV, maxV, step, fmt, y, field, source, onChange, fallback)
+	source, onChange = source or Cfg, onChange or Changed
 	local s = CreateFrame("Slider", nil, parent, "UISliderTemplateWithLabels")
 	s:SetPoint("TOPLEFT", 24, y)
 	s:SetSize(272, 17)
@@ -28,11 +31,11 @@ local function MakeSlider(parent, label, minV, maxV, step, fmt, y, field)
 		self.Text:SetText(label .. ": " .. fmt(v))
 		if refreshing then return end
 		if step >= 1 then v = math.floor(v + 0.5) end
-		Cfg()[field] = v
-		Changed()
+		source()[field] = v
+		onChange()
 	end)
 	s.Refresh = function()
-		local v = Cfg()[field]
+		local v = source()[field] or (fallback and fallback()) or 1
 		s:SetValue(v)
 		s.Text:SetText(label .. ": " .. fmt(v))
 	end
@@ -68,7 +71,7 @@ end
 
 local function Build()
 	frame = CreateFrame("Frame", "TitanBarsConfig", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(320, 540)
+	frame:SetSize(320, 660)
 	frame:SetPoint("CENTER")
 	frame:SetFrameStrata("HIGH")
 	frame:SetMovable(true)
@@ -154,11 +157,28 @@ local function Build()
 			TB:Print("Type /reload to apply.")
 		end)
 
+	-- Bags and menu buttons
+	local extrasLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	extrasLabel:SetPoint("TOPLEFT", 20, -484)
+	extrasLabel:SetText("Bags and menu buttons")
+	for n, info in ipairs(TB.EXTRAS) do
+		MakeSlider(frame, info.label .. " size", 0.3, 3, 0.05, Percent, -500 - n * 45, "scale",
+			function() return TB:ExtraCfg(info.key) end,
+			function() TB:ApplyExtra(info) end,
+			function() local f = _G[info.name]; return f and f:GetScale() end)
+	end
+	MakeCheck(frame, "Hide bag + menu button art (needs /reload)", 18, -584,
+		function() return TB.db.hideExtraArt end,
+		function(v)
+			TB.db.hideExtraArt = v
+			TB:Print("Type /reload to apply.")
+		end)
+
 	local help = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	help:SetPoint("TOPLEFT", 22, -480)
+	help:SetPoint("TOPLEFT", 22, -614)
 	help:SetWidth(280)
 	help:SetJustifyH("LEFT")
-	help:SetText("Unlock, then drag bars to move them and use the mouse wheel over a bar to resize. Keybind mode: hover a button and press a key. Pet and stance bars stay Blizzard's: move them in Edit Mode.")
+	help:SetText("Unlock, then drag bars, bags and menu buttons to move them; mouse wheel to resize. Keybind mode: hover a button and press a key. Pet and stance bars stay Blizzard's: move them in Edit Mode.")
 end
 
 function TB:RefreshConfig()

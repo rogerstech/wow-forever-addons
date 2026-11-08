@@ -229,6 +229,7 @@ function TB:SetUnlocked(on)
 		local m = bar.mover or CreateMover(bar)
 		m:SetShown(on and self.db.bars[id].enabled)
 	end
+	self:SetExtrasUnlocked(on)
 	if self.RefreshConfig then self:RefreshConfig() end
-	self:Print(on and "Bars unlocked. Drag to move, mouse wheel to resize, /tb lock when done." or "Bars locked.")
+	self:Print(on and "Unlocked. Drag bars, bags and menu buttons to move them, mouse wheel to resize, /tb lock when done." or "Bars locked.")
 end

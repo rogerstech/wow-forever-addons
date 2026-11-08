@@ -44,7 +44,7 @@ end
 TB.DeepCopy = DeepCopy
 
 local function NewProfile()
-	local p = { hideBlizzard = true, bars = {}, keys = {}, keysImported = false }
+	local p = { hideBlizzard = true, hideExtraArt = true, bars = {}, keys = {}, extras = {}, keysImported = false }
 	for id = 1, TB.NUM_BARS do p.bars[id] = BarDefaults(id) end
 	return p
 end
@@ -70,9 +70,17 @@ function TB:LoadDB()
 	end
 	sv.lastProfile = key
 	self.db = sv.profiles[key]
+	self:FillDefaults()
+end
+
+-- Profiles saved by older versions are missing newer settings.
+function TB:FillDefaults()
+	local db = self.db
 	for id = 1, self.NUM_BARS do
-		self.db.bars[id] = self.db.bars[id] or BarDefaults(id)
+		db.bars[id] = db.bars[id] or BarDefaults(id)
 	end
+	db.extras = db.extras or {}
+	if db.hideExtraArt == nil then db.hideExtraArt = true end
 end
 
 function TB:CopyProfileFrom(name)
@@ -83,8 +91,12 @@ function TB:CopyProfileFrom(name)
 	end
 	TitanBarsDB.profiles[self:CharKey()] = DeepCopy(src)
 	self.db = TitanBarsDB.profiles[self:CharKey()]
+	self:FillDefaults()
 	self:Print("Copied settings from " .. name .. ".")
-	self:RunOutOfCombat("refreshAll", function() TB:RefreshAll() end)
+	self:RunOutOfCombat("refreshAll", function()
+		TB:RefreshAll()
+		TB:ApplyExtras()
+	end)
 end
 
 function TB:Print(msg)
@@ -93,9 +105,9 @@ end
 
 -- Anything touching secure frames must wait until combat ends.
 local pending = {}
-function TB:RunOutOfCombat(key, fn)
+function TB:RunOutOfCombat(key, fn, silent)
 	if InCombatLockdown() then
-		if not pending[key] then
+		if not pending[key] and not silent then
 			self:Print("Change queued until combat ends.")
 		end
 		pending[key] = fn
@@ -146,6 +158,7 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		if TB.db.hideBlizzard then TB:HideBlizzard() end
 		TB:CreateBars()
 		TB:RefreshAll()
+		TB:SetupExtras()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		TB:ImportBlizzardKeys()
 		TB:ApplyBindings()
@@ -173,7 +186,7 @@ end)
 ---------------------------------------------------------------------------
 local HELP = {
 	"/tb  - open the settings window",
-	"/tb unlock  - drag bars to move them; mouse wheel over a bar to resize",
+	"/tb unlock  - drag bars, bags and menu buttons to move them; mouse wheel to resize",
 	"/tb lock  - lock bars in place",
 	"/tb bind  - keybind mode: hover a button and press a key (Esc clears)",
 	"/tb importkeys  - re-copy your Blizzard action bar keybinds onto the bars",
@@ -208,8 +221,9 @@ SlashCmdList.TITANBARS = function(msg)
 		TB:CopyProfileFrom(rest)
 	elseif cmd == "reset" then
 		for id = 1, TB.NUM_BARS do TB:ResetBar(id) end
+		wipe(TB.db.extras)
 		TB:RefreshAll()
-		TB:Print("All bars reset.")
+		TB:Print("All bars reset. Type /reload to put the bags and menu buttons back.")
 	else
 		for _, line in ipairs(HELP) do TB:Print(line) end
 	end

@@ -5,8 +5,8 @@ They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
 |-------|--------------|---------|
-| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. | `/tb` |
-| **TitanFrames** | Move and resize the minimap, party frames and raid frames. | `/tf` |
+| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. | `/tb` |
+| **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar. | `/tf` |
 
 ## Install
 
@@ -25,7 +25,8 @@ so nothing changes until you start moving things.
 
 - `/tb` opens the settings window. Pick a bar (1-8) at the top, then set:
   enabled, number of buttons, buttons per row, size, spacing, opacity, show/hide rule.
-- `/tb unlock` shows a blue handle on each bar. **Drag** to move, **mouse wheel** to resize
+- `/tb unlock` shows a blue handle on each bar, plus the bag bar and the menu buttons
+  (character, spellbook, professions...). **Drag** to move, **mouse wheel** to resize
   (hold Shift for fine steps), **right-click** for that bar's settings. `/tb lock` when done.
 - `/tb bind` turns on keybind mode. Hover any button and press a key, mouse button (3-5)
   or mouse wheel to bind it. Modifiers work (Shift/Ctrl/Alt). **Esc** over a button clears it.
@@ -46,12 +47,17 @@ Show/hide rule examples (macro conditions):
 Keybinds are applied as override bindings: your real Blizzard bindings are left alone and come back
 if you disable the addon. "Cast on key down" (Options > Gameplay > Combat) is respected.
 
-**Not replaced:** the pet bar, stance bar, extra action button, vehicle bar and bag/micro menu stay
-Blizzard's. Move those in Edit Mode.
+**Bags and menu buttons:** unlock and drag them like a bar, mouse wheel to resize, right-click to
+hand them back to Edit Mode. Their sizes are also in the `/tb` window. Their frame art is hidden by
+default; untick "Hide bag + menu button art" and `/reload` to get it back.
+
+**Not replaced:** the pet bar, stance bar, extra action button and vehicle bar stay Blizzard's.
+Move those in Edit Mode.
 
 ## TitanFrames
 
-- `/tf` opens a window with a size slider for Minimap, Party frames and Raid frames.
+- `/tf` opens a window with a size slider for Minimap, Party frames, Raid frames, XP bar, and the
+  second status bar (reputation/honor, when you track one).
 - `/tf unlock` shows orange handles. Drag to move, mouse wheel to resize, right-click to hand the
   frame back to Blizzard. Handles work even when you aren't in a group.
 - `/tf reset` hands everything back (then `/reload`).
