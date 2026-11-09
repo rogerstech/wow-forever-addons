@@ -80,12 +80,18 @@ function TB:CreateBars()
 		bar:SetMovable(true)
 		bar:SetClampedToScreen(true)
 		bar.buttons = {}
-		for i = 1, self.MAX_BUTTONS do
-			bar.buttons[i] = CreateButton(bar, i)
+		if self.BAR_INFO[id].stance then
+			for i = 1, self.MAX_BUTTONS do
+				bar.buttons[i] = self:CreateStanceButton(bar, i)
+			end
+		else
+			for i = 1, self.MAX_BUTTONS do
+				bar.buttons[i] = CreateButton(bar, i)
+			end
+			bar:SetAttribute("_onstate-page", PAGE_SNIPPET)
+			local driver = id == 1 and MAIN_PAGE_DRIVER or tostring(self.BAR_INFO[id].page)
+			RegisterStateDriver(bar, "page", driver)
 		end
-		bar:SetAttribute("_onstate-page", PAGE_SNIPPET)
-		local driver = id == 1 and MAIN_PAGE_DRIVER or tostring(self.BAR_INFO[id].page)
-		RegisterStateDriver(bar, "page", driver)
 		self.bars[id] = bar
 	end
 end
@@ -101,20 +107,23 @@ function TB:DefaultPos(id, w, h)
 	if id == 4 or id == 5 then
 		return { x = sw - 30 - (id - 4) * (w + 6), y = sh / 2 }
 	end
-	local row = id <= 3 and (id - 1) or (id - 3)
+	local row = id <= 3 and (id - 1) or id == self.STANCE_BAR and 3 or (id - 3)
 	return { x = sw / 2, y = 30 + h / 2 + row * (h + 6) }
 end
 
 function TB:LayoutBar(id)
 	local bar, cfg = self.bars[id], self.db.bars[id]
-	local n = cfg.buttons
+	-- The stance bar only shows as many buttons as you have forms.
+	local shown = cfg.buttons
+	if self.BAR_INFO[id].stance then shown = math.min(shown, self.NumForms()) end
+	local n = math.max(shown, 1)
 	local perRow = math.max(1, math.min(cfg.perRow, n))
 	local rows = math.ceil(n / perRow)
 	local size, pad = ButtonSize(bar), cfg.padding
 
 	for i, btn in ipairs(bar.buttons) do
 		btn:ClearAllPoints()
-		if i <= n then
+		if i <= shown then
 			local col, row = (i - 1) % perRow, math.floor((i - 1) / perRow)
 			btn:SetPoint("TOPLEFT", bar, "TOPLEFT", col * (size + pad), -row * (size + pad))
 			btn:Show()

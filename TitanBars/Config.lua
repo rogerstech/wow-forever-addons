@@ -71,7 +71,7 @@ end
 
 local function Build()
 	frame = CreateFrame("Frame", "TitanBarsConfig", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(320, 660)
+	frame:SetSize(320, 690)
 	frame:SetPoint("CENTER")
 	frame:SetFrameStrata("HIGH")
 	frame:SetMovable(true)
@@ -89,7 +89,7 @@ local function Build()
 	-- Bar selector
 	frame.tabs = {}
 	for id = 1, TB.NUM_BARS do
-		local tab = MakeButton(frame, tostring(id), 34, "TOPLEFT", 14 + (id - 1) * 37, -32, function()
+		local tab = MakeButton(frame, tostring(id), 30, "TOPLEFT", 14 + (id - 1) * 33, -32, function()
 			selected = id
 			TB:RefreshConfig()
 		end)
@@ -174,11 +174,15 @@ local function Build()
 			TB:Print("Type /reload to apply.")
 		end)
 
+	MakeCheck(frame, "Show cooldown numbers on buttons", 18, -610,
+		function() return GetCVarBool("countdownForCooldowns") end,
+		function(v) SetCVar("countdownForCooldowns", v and "1" or "0") end)
+
 	local help = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	help:SetPoint("TOPLEFT", 22, -614)
+	help:SetPoint("TOPLEFT", 22, -642)
 	help:SetWidth(280)
 	help:SetJustifyH("LEFT")
-	help:SetText("Unlock, then drag bars, bags and menu buttons to move them; mouse wheel to resize. Keybind mode: hover a button and press a key. Pet and stance bars stay Blizzard's: move them in Edit Mode.")
+	help:SetText("Unlock, then drag bars, bags and menu buttons to move them; mouse wheel to resize. Keybind mode: hover a button and press a key. Bar 9 is your forms / stance bar. The pet bar stays Blizzard's: move it in Edit Mode.")
 end
 
 function TB:RefreshConfig()

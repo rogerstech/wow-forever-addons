@@ -1,21 +1,22 @@
 # WoW Forever Addons
 
-Two addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Three addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
 |-------|--------------|---------|
-| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. | `/tb` |
+| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars plus a forms / stance bar you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. | `/tb` |
+| **TitanTools** | Buff reminder (Mark of the Wild, Thorns, Omen of Clarity) and a "not in Bear Form" warning, a target-of-target frame for tanking, auto-repair and junk selling. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar. | `/tf` |
 
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars` and `TitanFrames` folders into
+2. Copy the `TitanBars`, `TitanFrames` and `TitanTools` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
-3. Start the game. At character select, click **Menu** (top of the screen) > **AddOns** and make sure both are ticked
+3. Start the game. At character select, click **Menu** (top of the screen) > **AddOns** and make sure all three are ticked
    (tick "Load out of date AddOns" if a patch has bumped the interface number).
 
 ## TitanBars
@@ -23,7 +24,7 @@ They were written against Blizzard's own Forever-branch UI source.
 On first login it copies your existing keybinds over (key `1` still fires bar 1 button 1, etc.),
 so nothing changes until you start moving things.
 
-- `/tb` opens the settings window. Pick a bar (1-8) at the top, then set:
+- `/tb` opens the settings window. Pick a bar (1-9) at the top, then set:
   enabled, number of buttons, buttons per row, size, spacing, opacity, show/hide rule.
 - `/tb unlock` shows a blue handle on each bar, plus the bag bar and the menu buttons
   (character, spellbook, professions...). **Drag** to move, **mouse wheel** to resize
@@ -51,7 +52,15 @@ if you disable the addon. "Cast on key down" (Options > Gameplay > Combat) is re
 hand them back to Edit Mode. Their sizes are also in the `/tb` window. Their frame art is hidden by
 default; untick "Hide bag + menu button art" and `/reload` to get it back.
 
-**Not replaced:** the pet bar, stance bar, extra action button and vehicle bar stay Blizzard's.
+**Bar 9 (forms / stance):** your Bear, Cat, Travel and other forms, with Blizzard's stance bar hidden.
+It only shows as many buttons as you have forms. Your Blizzard stance keybinds are copied over once;
+bind new ones in keybind mode like any other bar. Clicking your current form drops it, same as Blizzard's.
+Turn bar 9 off to get Blizzard's stance bar back (after `/reload`).
+
+**Cooldown numbers:** tick "Show cooldown numbers on buttons" in `/tb` for a countdown on every button.
+This is Blizzard's own setting, so it also shows in Options.
+
+**Not replaced:** the pet bar, extra action button and vehicle bar stay Blizzard's.
 Move those in Edit Mode.
 
 ## TitanFrames
@@ -66,6 +75,20 @@ Once you change a frame here, TitanFrames keeps it there even if Edit Mode or a 
 moves it. Use Reset to let Edit Mode control it again. Party and raid frames are protected, so
 changes you make to them during combat apply when combat ends. As a fight starts, a secure
 handler puts them back in your spot in case anything moved them.
+
+## TitanTools
+
+- `/ttools` opens the settings window. `/ttools unlock` shows green boxes over the buff reminder and
+  the target-of-target frame: drag to move, mouse wheel to resize, right-click to reset.
+- **Buff reminder:** large pulsing icons when Mark of the Wild (Gift of the Wild counts), Thorns or
+  Omen of Clarity is missing, or yellow with a timer when one has under a minute left. Out of combat
+  only. Only spells you know are checked. Druid only for now.
+- **Bear Form warning:** an orange "NOT IN BEAR" icon when you're in combat, in a group, and not in
+  Bear or Dire Bear Form. Untick it if you're healing or in Cat Form on purpose.
+- **Target of target:** shows who your target is hitting. On a hostile target the bar is green
+  while it's on you and red with a "!" when it's on someone else. Click it to target them.
+- **Vendors:** opening a vendor repairs everything and sells grey items (12 per visit, the buyback
+  limit), then prints what it cost and earned.
 
 ## Notes
 

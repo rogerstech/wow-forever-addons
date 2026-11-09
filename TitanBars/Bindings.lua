@@ -5,6 +5,11 @@ local ADDON, TB = ...
 
 local owner = CreateFrame("Frame", "TitanBarsBindingOwner")
 
+function TB:ButtonLabel(btn)
+	if btn.titanBar == self.STANCE_BAR then return "form " .. btn.titanIndex end
+	return ("bar %d button %d"):format(btn.titanBar, btn.titanIndex)
+end
+
 function TB:GetButtonKeys(id, i)
 	self.db.keys[id] = self.db.keys[id] or {}
 	self.db.keys[id][i] = self.db.keys[id][i] or {}
@@ -15,7 +20,9 @@ end
 -- Runs once per profile automatically; /tb importkeys forces it again.
 -- Returns true if anything was imported.
 function TB:ImportBlizzardKeys(force)
-	if self.db.keysImported and not force then return false end
+	if self.db.keysImported and not force then
+		return self:ImportStanceKeys()
+	end
 	if force then ClearOverrideBindings(owner) end
 	local found, imported = false, {}
 	for id, info in ipairs(self.BAR_INFO) do
@@ -32,6 +39,19 @@ function TB:ImportBlizzardKeys(force)
 	self.db.keysImported = true
 	if force then self:Print("Copied your Blizzard action bar keybinds onto the bars.") end
 	return true
+end
+
+-- Profiles from before the stance bar existed already imported their keys, so
+-- pick up the Blizzard stance keys on their own, once.
+function TB:ImportStanceKeys()
+	if self.db.keys[self.STANCE_BAR] then return false end
+	local list, found = {}, false
+	for i = 1, self.MAX_BUTTONS do
+		list[i] = { GetBindingKey("SHAPESHIFTBUTTON" .. i) }
+		if #list[i] > 0 then found = true end
+	end
+	if found then self.db.keys[self.STANCE_BAR] = list end
+	return found
 end
 
 function TB:ApplyBindings()
@@ -109,7 +129,7 @@ local function ShowBinderTooltip()
 	local btn = binder.target
 	if not btn then return end
 	GameTooltip:SetOwner(binder, "ANCHOR_TOP")
-	GameTooltip:AddLine(("Bar %d, button %d"):format(btn.titanBar, btn.titanIndex))
+	GameTooltip:AddLine((TB:ButtonLabel(btn):gsub("^%l", string.upper)))
 	local keys = TB:GetButtonKeys(btn.titanBar, btn.titanIndex)
 	if #keys == 0 then
 		GameTooltip:AddLine("No key bound", 0.6, 0.6, 0.6)
@@ -137,14 +157,14 @@ function TB:BindKey(btn, key)
 	if was and was ~= "" and not was:find("^CLICK TitanBars") then
 		note = " (overrides " .. (GetBindingName(was) or was) .. ")"
 	end
-	self:Print(("%s -> bar %d button %d%s"):format(GetBindingText(key), id, index, note))
+	self:Print(("%s -> %s%s"):format(GetBindingText(key), self:ButtonLabel(btn), note))
 	ShowBinderTooltip()
 end
 
 function TB:ClearKeys(btn)
 	wipe(self:GetButtonKeys(btn.titanBar, btn.titanIndex))
 	self:ApplyBindings()
-	self:Print(("Cleared keys for bar %d button %d"):format(btn.titanBar, btn.titanIndex))
+	self:Print("Cleared keys for " .. self:ButtonLabel(btn))
 	ShowBinderTooltip()
 end
 
