@@ -89,7 +89,9 @@ function TB:UpdateStanceSpells()
 				local spellID = select(4, GetShapeshiftFormInfo(i))
 				local spellName = spellID and C_Spell.GetSpellName(spellID)
 				if spellName then
-					cast = "/cast " .. spellName
+					-- Cast first, cancel second: the cancel line only matches if you were
+					-- already in this form, so this toggles even without the form snippet.
+					cast = ("/cast [noform:%d] %s\n/cancelform [form:%d]"):format(i, spellName, i)
 				elseif not warned[i] then
 					warned[i] = true
 					TB:Print(("Couldn't read the spell for form %d, so its button won't work. Please report this."):format(i))
