@@ -33,6 +33,7 @@ so nothing changes until you start moving things.
   or mouse wheel to bind it. Modifiers work (Shift/Ctrl/Alt). **Esc** over a button clears it.
   Click Done (or press Esc with nothing hovered) to finish.
 - `/tb importkeys` re-copies your Blizzard action bar keybinds onto the bars.
+- `/tb rankup` puts the highest rank you know of every spell on your bars (see Spell ranks below).
 - `/tb profiles`, `/tb copy Name - Realm` - layouts are saved per character. A new character
   starts with a copy of the last one you played.
 - `/tb reset` puts every bar back to default.
@@ -54,6 +55,13 @@ default; untick "Hide bag + menu button art" and `/reload` to get it back.
 
 **Cooldown numbers:** tick "Show cooldown numbers on buttons" in `/tb` for a countdown on every button.
 This is Blizzard's own setting, so it also shows in Options.
+
+**Spell ranks (1.4.0):** learning a new rank (Maul Rank 6, say) doesn't replace the old rank on your
+bars, so TitanBars does it: when you train, any button holding your previous highest rank moves to the
+new one, and chat shows `Maul Rank 5 -> Rank 6 (slot 3)`. Buttons you keep on a lower rank on
+purpose (a downranked heal) are left alone. `/tb rankup` moves every lower rank up, downranks
+included. `/tb rankup off` / `on` turns the automatic part off and on. It waits for combat to end,
+and skips a button if you're holding something on the cursor (it tries again next time).
 
 **Not replaced:** the pet bar, stance / forms bar, extra action button and vehicle bar stay Blizzard's.
 Move those in Edit Mode.

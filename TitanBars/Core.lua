@@ -81,6 +81,7 @@ function TB:FillDefaults()
 	end
 	db.extras = db.extras or {}
 	if db.hideExtraArt == nil then db.hideExtraArt = true end
+	if db.autoRankUp == nil then db.autoRankUp = true end
 end
 
 function TB:CopyProfileFrom(name)
@@ -190,6 +191,8 @@ local HELP = {
 	"/tb lock  - lock bars in place",
 	"/tb bind  - keybind mode: hover a button and press a key (Esc clears)",
 	"/tb importkeys  - re-copy your Blizzard action bar keybinds onto the bars",
+	"/tb rankup  - put the highest rank you know of every spell on your bars (downranks too)",
+	"/tb rankup on | off  - automatically move buttons to a new rank when you train it",
 	"/tb profiles  - list saved character profiles",
 	"/tb copy <Name - Realm>  - copy another character's layout and keys",
 	"/tb reset  - reset every bar to defaults",
@@ -215,6 +218,14 @@ SlashCmdList.TITANBARS = function(msg)
 	elseif cmd == "importkeys" then
 		TB:ImportBlizzardKeys(true)
 		TB:ApplyBindings()
+	elseif cmd == "rankup" then
+		local opt = rest:lower()
+		if opt == "on" or opt == "off" then
+			TB.db.autoRankUp = (opt == "on")
+			TB:Print("Automatic rank-up is " .. (TB.db.autoRankUp and "on." or "off."))
+		else
+			TB:RankUpAll()
+		end
 	elseif cmd == "profiles" then
 		for name in pairs(TitanBarsDB.profiles) do TB:Print("  " .. name) end
 	elseif cmd == "copy" and rest ~= "" then
