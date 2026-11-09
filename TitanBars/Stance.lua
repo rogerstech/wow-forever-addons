@@ -18,6 +18,9 @@ function TB:CreateStanceButton(bar, i)
 	btn.titanBar, btn.titanIndex = bar.id, i
 	btn:RegisterForClicks("AnyUp")
 	btn:SetAttribute("type", "spell")
+	-- Mouse clicks only send the release. Without this, "cast on key down" makes the
+	-- secure template wait for a press that never comes, and the click does nothing.
+	btn:SetAttribute("useOnKeyDown", false)
 
 	-- Same hidden key twin as the action bars, so the key casts on key down.
 	local key = CreateFrame("Button", name .. "Key", btn, "SecureActionButtonTemplate")
@@ -42,6 +45,8 @@ function TB:CreateStanceButton(bar, i)
 	return btn
 end
 
+local warned = {}
+
 -- Which spell each button casts. Secure attributes, so out of combat only
 -- (you can't learn a form in combat anyway).
 function TB:UpdateStanceSpells()
@@ -51,7 +56,13 @@ function TB:UpdateStanceSpells()
 		local n = TB.NumForms()
 		for i, btn in ipairs(bar.buttons) do
 			local spellID
-			if i <= n then spellID = select(4, GetShapeshiftFormInfo(i)) end
+			if i <= n then
+				spellID = select(4, GetShapeshiftFormInfo(i))
+				if not spellID and not warned[i] then
+					warned[i] = true
+					TB:Print(("Couldn't read the spell for form %d, so its button won't work. Please report this."):format(i))
+				end
+			end
 			btn:SetAttribute("spell", spellID)
 			btn.titanKey:SetAttribute("spell", spellID)
 		end
