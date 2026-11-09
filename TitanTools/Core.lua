@@ -5,6 +5,7 @@ _G.TitanTools = TT
 local DEFAULTS = {
 	reminder = { enabled = true, bearWarning = true, lowTime = true, scale = 1 },
 	tot = { enabled = true, scale = 1 },
+	aggro = { enabled = true, groupOnly = false },
 	vendor = { repair = true, junk = true },
 }
 
@@ -21,6 +22,28 @@ end
 
 function TT:Print(msg)
 	print("|cff33ccffTitanTools|r: " .. msg)
+end
+
+-- The client can hand addons "secret" values in combat (health, who is who).
+-- Blizzard's widgets accept them directly; plain Lua can't test them.
+local function IsSecret(v)
+	return issecretvalue and issecretvalue(v)
+end
+
+function TT.ColorFromBoolean(tex, flag, yes, no)
+	if tex.SetVertexColorFromBoolean then
+		tex:SetVertexColorFromBoolean(flag, yes, no)
+	elseif not IsSecret(flag) then
+		tex:SetVertexColor((flag and yes or no):GetRGBA())
+	end
+end
+
+function TT.AlphaFromBoolean(region, flag, ifTrue, ifFalse)
+	if region.SetAlphaFromBoolean then
+		region:SetAlphaFromBoolean(flag, ifTrue, ifFalse)
+	elseif not IsSecret(flag) then
+		region:SetAlpha(flag and ifTrue or ifFalse)
+	end
 end
 
 -- Anything touching secure frames must wait until combat ends.
@@ -158,7 +181,7 @@ end
 
 local function Build()
 	frame = CreateFrame("Frame", "TitanToolsConfig", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(320, 360)
+	frame:SetSize(320, 440)
 	frame:SetPoint("CENTER")
 	frame:SetFrameStrata("HIGH")
 	frame:SetMovable(true)
@@ -186,19 +209,26 @@ local function Build()
 	MakeCheck(frame, "Show target-of-target frame", -160,
 		function() return t.enabled end, function(on) t.enabled = on; TT:UpdateToTEnabled() end)
 
-	Heading(frame, "Vendors", -194)
-	MakeCheck(frame, "Repair all gear automatically", -216,
+	local a = TT.db.aggro
+	Heading(frame, "Nameplate aggro colours", -194)
+	MakeCheck(frame, "Green = mob on you, red = on someone else", -216,
+		function() return a.enabled end, function(on) a.enabled = on; TT:UpdateAggro() end)
+	MakeCheck(frame, "Only while in a group", -240,
+		function() return a.groupOnly end, function(on) a.groupOnly = on; TT:UpdateAggro() end)
+
+	Heading(frame, "Vendors", -274)
+	MakeCheck(frame, "Repair all gear automatically", -296,
 		function() return v.repair end, function(on) v.repair = on end)
-	MakeCheck(frame, "Sell grey (junk) items automatically", -240,
+	MakeCheck(frame, "Sell grey (junk) items automatically", -320,
 		function() return v.junk end, function(on) v.junk = on end)
 
 	frame.lockBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 	frame.lockBtn:SetSize(110, 22)
-	frame.lockBtn:SetPoint("TOPLEFT", 18, -276)
+	frame.lockBtn:SetPoint("TOPLEFT", 18, -356)
 	frame.lockBtn:SetScript("OnClick", function() TT:SetUnlocked(not TT.unlocked) end)
 
 	local help = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	help:SetPoint("TOPLEFT", 22, -306)
+	help:SetPoint("TOPLEFT", 22, -386)
 	help:SetWidth(280)
 	help:SetJustifyH("LEFT")
 	help:SetText("Unlock, then drag the reminder and target-of-target frames; mouse wheel to resize, right-click to reset.")
@@ -251,6 +281,7 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		TT:SetupReminders()
 		TT:SetupToT()
 		TT:SetupVendor()
+		TT:SetupAggro()
 	elseif event == "PLAYER_REGEN_DISABLED" then
 		if TT.unlocked then TT:SetUnlocked(false) end
 	elseif event == "PLAYER_REGEN_ENABLED" then

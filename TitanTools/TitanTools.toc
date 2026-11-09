@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: TitanTools
-## Notes: Buff reminder (Mark of the Wild, Thorns, Omen of Clarity, Bear Form warning), target-of-target frame, auto-repair and junk selling.
+## Notes: Buff reminder (Mark of the Wild, Thorns, Omen of Clarity, Bear Form warning), target-of-target frame, nameplate aggro colours, auto-repair and junk selling.
 ## Author: Adam Rogers
-## Version: 1.0.0
+## Version: 1.1.0
 ## SavedVariables: TitanToolsDB
 ## IconTexture: Interface\Icons\Ability_Racial_BearForm
 
@@ -10,3 +10,4 @@ Core.lua
 Reminders.lua
 Vendor.lua
 TargetTarget.lua
+Aggro.lua

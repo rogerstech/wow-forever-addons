@@ -9,28 +9,6 @@ local OFF_ME = CreateColor(0.9, 0.15, 0.15, 1)
 
 local f
 
--- The client can hand addons "secret" values in combat (health, who is who).
--- Blizzard's widgets accept them directly; plain Lua can't test them.
-local function IsSecret(v)
-	return issecretvalue and issecretvalue(v)
-end
-
-local function ColorFromBoolean(tex, flag, yes, no)
-	if tex.SetVertexColorFromBoolean then
-		tex:SetVertexColorFromBoolean(flag, yes, no)
-	elseif not IsSecret(flag) then
-		tex:SetVertexColor((flag and yes or no):GetRGBA())
-	end
-end
-
-local function AlphaFromBoolean(region, flag, ifTrue, ifFalse)
-	if region.SetAlphaFromBoolean then
-		region:SetAlphaFromBoolean(flag, ifTrue, ifFalse)
-	elseif not IsSecret(flag) then
-		region:SetAlpha(flag and ifTrue or ifFalse)
-	end
-end
-
 local function Update()
 	if TT.unlocked then return end
 	if not UnitExists(UNIT) then return end
@@ -40,8 +18,8 @@ local function Update()
 	local tex = f.hp:GetStatusBarTexture()
 	if UnitCanAttack("player", "target") then
 		local onMe = UnitIsUnit(UNIT, "player")
-		ColorFromBoolean(tex, onMe, ON_ME, OFF_ME)
-		AlphaFromBoolean(f.warn, onMe, 0, 1)
+		TT.ColorFromBoolean(tex, onMe, ON_ME, OFF_ME)
+		TT.AlphaFromBoolean(f.warn, onMe, 0, 1)
 	else
 		-- Friendly target: just show who they're targeting, in class colour for players.
 		local _, class = UnitClass(UNIT)
