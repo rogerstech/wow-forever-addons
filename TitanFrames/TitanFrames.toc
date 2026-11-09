@@ -2,7 +2,7 @@
 ## Title: TitanFrames
 ## Notes: Move and resize the minimap, party frames, raid frames and XP bar. Map coordinates on the minimap.
 ## Author: Adam Rogers
-## Version: 1.2.0
+## Version: 1.2.1
 ## SavedVariables: TitanFramesDB
 ## IconTexture: Interface\Icons\INV_Misc_Map_01
 

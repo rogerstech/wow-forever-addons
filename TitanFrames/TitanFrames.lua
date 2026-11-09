@@ -289,18 +289,59 @@ end
 local win
 local refreshing = false
 
+-- Settings window whose contents scroll when the screen is too short to fit them.
+-- Controls go on window.content; call window:Fit() each time it opens.
+local function MakeScrollWindow(name, width, contentHeight)
+	local f = CreateFrame("Frame", name, UIParent, "BasicFrameTemplateWithInset")
+	f:SetWidth(width)
+	f:SetPoint("CENTER")
+	f:SetFrameStrata("HIGH")
+	f:SetMovable(true)
+	f:SetClampedToScreen(true)
+	f:EnableMouse(true)
+	f:RegisterForDrag("LeftButton")
+	f:SetScript("OnDragStart", f.StartMoving)
+	f:SetScript("OnDragStop", f.StopMovingOrSizing)
+	tinsert(UISpecialFrames, name)
+
+	local scroll = CreateFrame("ScrollFrame", nil, f)
+	scroll:SetPoint("TOPLEFT", 4, -26)
+	scroll:SetPoint("BOTTOMRIGHT", -22, 6)
+	local content = CreateFrame("Frame", nil, scroll)
+	content:SetSize(width - 26, contentHeight)
+	scroll:SetScrollChild(content)
+	f.content = content
+
+	local bar = CreateFrame("Slider", nil, f, "BackdropTemplate")
+	bar:SetPoint("TOPRIGHT", -8, -30)
+	bar:SetPoint("BOTTOMRIGHT", -8, 10)
+	bar:SetWidth(10)
+	bar:SetOrientation("VERTICAL")
+	bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
+	bar:SetBackdropColor(0, 0, 0, 0.5)
+	bar:SetThumbTexture("Interface\\Buttons\\WHITE8X8")
+	bar:GetThumbTexture():SetVertexColor(0.7, 0.7, 0.7, 0.9)
+	bar:GetThumbTexture():SetSize(10, 40)
+	bar:SetValueStep(1)
+	bar:SetScript("OnValueChanged", function(_, v) scroll:SetVerticalScroll(v) end)
+	scroll:EnableMouseWheel(true)
+	scroll:SetScript("OnMouseWheel", function(_, delta) bar:SetValue(bar:GetValue() - delta * 40) end)
+
+	function f:Fit()
+		local h = math.min(contentHeight + 32, math.floor(UIParent:GetHeight() - 60))
+		self:SetHeight(h)
+		local range = math.max(0, contentHeight - (h - 32))
+		bar:SetMinMaxValues(0, range)
+		bar:SetValue(math.min(bar:GetValue(), range))
+		scroll:SetVerticalScroll(bar:GetValue())
+		bar:SetShown(range > 0)
+	end
+	return f
+end
+
 local function BuildWindow()
-	win = CreateFrame("Frame", "TitanFramesConfig", UIParent, "BasicFrameTemplateWithInset")
-	win:SetSize(320, 450)
-	win:SetPoint("CENTER")
-	win:SetFrameStrata("HIGH")
-	win:SetMovable(true)
-	win:SetClampedToScreen(true)
-	win:EnableMouse(true)
-	win:RegisterForDrag("LeftButton")
-	win:SetScript("OnDragStart", win.StartMoving)
-	win:SetScript("OnDragStop", win.StopMovingOrSizing)
-	tinsert(UISpecialFrames, "TitanFramesConfig")
+	win = MakeScrollWindow("TitanFramesConfig", 346, 410)
+	local c = win.content
 
 	local title = win:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	title:SetPoint("TOP", 0, -5)
@@ -308,8 +349,8 @@ local function BuildWindow()
 
 	win.sliders = {}
 	for n, info in ipairs(TF.FRAMES) do
-		local s = CreateFrame("Slider", nil, win, "UISliderTemplateWithLabels")
-		s:SetPoint("TOPLEFT", 24, -30 - n * 50)
+		local s = CreateFrame("Slider", nil, c, "UISliderTemplateWithLabels")
+		s:SetPoint("TOPLEFT", 20, -4 - n * 50)
 		s:SetSize(200, 17)
 		s:SetMinMaxValues(MIN_SCALE, MAX_SCALE)
 		s:SetValueStep(0.05)
@@ -325,7 +366,7 @@ local function BuildWindow()
 			cfg.scale = v
 			TF:Apply(info)
 		end)
-		local reset = CreateFrame("Button", nil, win, "UIPanelButtonTemplate")
+		local reset = CreateFrame("Button", nil, c, "UIPanelButtonTemplate")
 		reset:SetSize(60, 22)
 		reset:SetPoint("LEFT", s, "RIGHT", 14, 0)
 		reset:SetText("Reset")
@@ -334,29 +375,29 @@ local function BuildWindow()
 		win.sliders[n] = s
 	end
 
-	local c = CreateFrame("CheckButton", nil, win)
-	c:SetSize(24, 24)
-	c:SetPoint("TOPLEFT", 20, -312)
-	c:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
-	c:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
-	c:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight", "ADD")
-	c:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
-	c.text = c:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	c.text:SetPoint("LEFT", c, "RIGHT", 4, 0)
-	c.text:SetText("Show map coordinates on the minimap")
-	c:SetScript("OnClick", function(self)
+	local check = CreateFrame("CheckButton", nil, c)
+	check:SetSize(24, 24)
+	check:SetPoint("TOPLEFT", 16, -290)
+	check:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
+	check:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
+	check:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight", "ADD")
+	check:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
+	check.text = check:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	check.text:SetPoint("LEFT", check, "RIGHT", 4, 0)
+	check.text:SetText("Show map coordinates on the minimap")
+	check:SetScript("OnClick", function(self)
 		TF:Cfg("coords").enabled = self:GetChecked() and true or false
 		TF:UpdateCoords()
 	end)
-	win.coordsCheck = c
+	win.coordsCheck = check
 
-	win.lockBtn = CreateFrame("Button", nil, win, "UIPanelButtonTemplate")
+	win.lockBtn = CreateFrame("Button", nil, c, "UIPanelButtonTemplate")
 	win.lockBtn:SetSize(120, 22)
-	win.lockBtn:SetPoint("BOTTOM", 0, 50)
+	win.lockBtn:SetPoint("TOP", 0, -326)
 	win.lockBtn:SetScript("OnClick", function() TF:SetUnlocked(not TF.unlocked) end)
 
-	local help = win:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	help:SetPoint("BOTTOM", 0, 14)
+	local help = c:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	help:SetPoint("TOP", 0, -360)
 	help:SetWidth(280)
 	help:SetText("Unlock to drag frames around. Frames you change here ignore Edit Mode until you Reset them.")
 end
@@ -377,6 +418,7 @@ end
 
 function TF:ToggleWindow()
 	if not win then BuildWindow() end
+	win:Fit()
 	win:SetShown(not win:IsShown())
 	self:RefreshWindow()
 end

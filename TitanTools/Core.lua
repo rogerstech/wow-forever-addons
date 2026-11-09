@@ -180,61 +180,102 @@ local function Heading(parent, text, y)
 	h:SetText(text)
 end
 
+-- Settings window whose contents scroll when the screen is too short to fit them.
+-- Controls go on window.content; call window:Fit() each time it opens.
+local function MakeScrollWindow(name, width, contentHeight)
+	local f = CreateFrame("Frame", name, UIParent, "BasicFrameTemplateWithInset")
+	f:SetWidth(width)
+	f:SetPoint("CENTER")
+	f:SetFrameStrata("HIGH")
+	f:SetMovable(true)
+	f:SetClampedToScreen(true)
+	f:EnableMouse(true)
+	f:RegisterForDrag("LeftButton")
+	f:SetScript("OnDragStart", f.StartMoving)
+	f:SetScript("OnDragStop", f.StopMovingOrSizing)
+	tinsert(UISpecialFrames, name)
+
+	local scroll = CreateFrame("ScrollFrame", nil, f)
+	scroll:SetPoint("TOPLEFT", 4, -26)
+	scroll:SetPoint("BOTTOMRIGHT", -22, 6)
+	local content = CreateFrame("Frame", nil, scroll)
+	content:SetSize(width - 26, contentHeight)
+	scroll:SetScrollChild(content)
+	f.content = content
+
+	local bar = CreateFrame("Slider", nil, f, "BackdropTemplate")
+	bar:SetPoint("TOPRIGHT", -8, -30)
+	bar:SetPoint("BOTTOMRIGHT", -8, 10)
+	bar:SetWidth(10)
+	bar:SetOrientation("VERTICAL")
+	bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
+	bar:SetBackdropColor(0, 0, 0, 0.5)
+	bar:SetThumbTexture("Interface\\Buttons\\WHITE8X8")
+	bar:GetThumbTexture():SetVertexColor(0.7, 0.7, 0.7, 0.9)
+	bar:GetThumbTexture():SetSize(10, 40)
+	bar:SetValueStep(1)
+	bar:SetScript("OnValueChanged", function(_, v) scroll:SetVerticalScroll(v) end)
+	scroll:EnableMouseWheel(true)
+	scroll:SetScript("OnMouseWheel", function(_, delta) bar:SetValue(bar:GetValue() - delta * 40) end)
+
+	function f:Fit()
+		local h = math.min(contentHeight + 32, math.floor(UIParent:GetHeight() - 60))
+		self:SetHeight(h)
+		local range = math.max(0, contentHeight - (h - 32))
+		bar:SetMinMaxValues(0, range)
+		bar:SetValue(math.min(bar:GetValue(), range))
+		scroll:SetVerticalScroll(bar:GetValue())
+		bar:SetShown(range > 0)
+	end
+	return f
+end
+
 local function Build()
-	frame = CreateFrame("Frame", "TitanToolsConfig", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(320, 520)
-	frame:SetPoint("CENTER")
-	frame:SetFrameStrata("HIGH")
-	frame:SetMovable(true)
-	frame:SetClampedToScreen(true)
-	frame:EnableMouse(true)
-	frame:RegisterForDrag("LeftButton")
-	frame:SetScript("OnDragStart", frame.StartMoving)
-	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-	tinsert(UISpecialFrames, "TitanToolsConfig")
+	frame = MakeScrollWindow("TitanToolsConfig", 346, 500)
+	local c = frame.content
 
 	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.title:SetPoint("TOP", 0, -5)
 	frame.title:SetText("TitanTools")
 
 	local r, t, v = TT.db.reminder, TT.db.tot, TT.db.vendor
-	Heading(frame, "Buff reminder", -34)
-	MakeCheck(frame, "Show missing buffs (out of combat)", -56,
+	Heading(c, "Buff reminder", -8)
+	MakeCheck(c, "Show missing buffs (out of combat)", -30,
 		function() return r.enabled end, function(on) r.enabled = on; TT:UpdateReminders() end)
-	MakeCheck(frame, "Also warn when a buff has under 1 min left", -80,
+	MakeCheck(c, "Also warn when a buff has under 1 min left", -54,
 		function() return r.lowTime end, function(on) r.lowTime = on; TT:UpdateReminders() end)
-	MakeCheck(frame, "Warn in group combat when not in Bear Form", -104,
+	MakeCheck(c, "Warn in group combat when not in Bear Form", -78,
 		function() return r.bearWarning end, function(on) r.bearWarning = on; TT:UpdateReminders() end)
 
-	Heading(frame, "Target of target", -138)
-	MakeCheck(frame, "Show target-of-target frame", -160,
+	Heading(c, "Target of target", -112)
+	MakeCheck(c, "Show target-of-target frame", -134,
 		function() return t.enabled end, function(on) t.enabled = on; TT:UpdateToTEnabled() end)
 
 	local a = TT.db.aggro
-	Heading(frame, "Nameplate aggro colours", -194)
-	MakeCheck(frame, "Green = mob on you, red = on someone else", -216,
+	Heading(c, "Nameplate aggro colours", -168)
+	MakeCheck(c, "Green = mob on you, red = on someone else", -190,
 		function() return a.enabled end, function(on) a.enabled = on; TT:UpdateAggro() end)
-	MakeCheck(frame, "Only while in a group", -240,
+	MakeCheck(c, "Only while in a group", -214,
 		function() return a.groupOnly end, function(on) a.groupOnly = on; TT:UpdateAggro() end)
 
-	Heading(frame, "Vendors", -274)
-	MakeCheck(frame, "Repair all gear automatically", -296,
+	Heading(c, "Vendors", -248)
+	MakeCheck(c, "Repair all gear automatically", -270,
 		function() return v.repair end, function(on) v.repair = on end)
-	MakeCheck(frame, "Sell grey (junk) items automatically", -320,
+	MakeCheck(c, "Sell grey (junk) items automatically", -294,
 		function() return v.junk end, function(on) v.junk = on end)
 
 	local q = TT.db.quest
-	Heading(frame, "Quests", -354)
-	MakeCheck(frame, "Accept and turn in quests (hold Shift to skip)", -376,
+	Heading(c, "Quests", -328)
+	MakeCheck(c, "Accept and turn in quests (hold Shift to skip)", -350,
 		function() return q.enabled end, function(on) q.enabled = on end)
 
-	frame.lockBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	frame.lockBtn = CreateFrame("Button", nil, c, "UIPanelButtonTemplate")
 	frame.lockBtn:SetSize(110, 22)
-	frame.lockBtn:SetPoint("TOPLEFT", 18, -412)
+	frame.lockBtn:SetPoint("TOPLEFT", 18, -386)
 	frame.lockBtn:SetScript("OnClick", function() TT:SetUnlocked(not TT.unlocked) end)
 
-	local help = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	help:SetPoint("TOPLEFT", 22, -442)
+	local help = c:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	help:SetPoint("TOPLEFT", 22, -416)
 	help:SetWidth(280)
 	help:SetJustifyH("LEFT")
 	help:SetText("Unlock, then drag the reminder and target-of-target frames; mouse wheel to resize, right-click to reset.\n\nRaid marker keys: Options > Keybindings > AddOns > TitanTools.")
@@ -251,6 +292,7 @@ function TT:ToggleConfig()
 		frame:Hide()
 	else
 		if not frame then Build() end
+		frame:Fit()
 		frame:Show()
 		self:RefreshConfig()
 	end

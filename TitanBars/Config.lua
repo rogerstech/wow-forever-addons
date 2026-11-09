@@ -69,18 +69,59 @@ local function MakeButton(parent, text, w, point, x, y, onClick)
 	return b
 end
 
+-- Settings window whose contents scroll when the screen is too short to fit them.
+-- Controls go on window.content; call window:Fit() each time it opens.
+local function MakeScrollWindow(name, width, contentHeight)
+	local f = CreateFrame("Frame", name, UIParent, "BasicFrameTemplateWithInset")
+	f:SetWidth(width)
+	f:SetPoint("CENTER")
+	f:SetFrameStrata("HIGH")
+	f:SetMovable(true)
+	f:SetClampedToScreen(true)
+	f:EnableMouse(true)
+	f:RegisterForDrag("LeftButton")
+	f:SetScript("OnDragStart", f.StartMoving)
+	f:SetScript("OnDragStop", f.StopMovingOrSizing)
+	tinsert(UISpecialFrames, name)
+
+	local scroll = CreateFrame("ScrollFrame", nil, f)
+	scroll:SetPoint("TOPLEFT", 4, -26)
+	scroll:SetPoint("BOTTOMRIGHT", -22, 6)
+	local content = CreateFrame("Frame", nil, scroll)
+	content:SetSize(width - 26, contentHeight)
+	scroll:SetScrollChild(content)
+	f.content = content
+
+	local bar = CreateFrame("Slider", nil, f, "BackdropTemplate")
+	bar:SetPoint("TOPRIGHT", -8, -30)
+	bar:SetPoint("BOTTOMRIGHT", -8, 10)
+	bar:SetWidth(10)
+	bar:SetOrientation("VERTICAL")
+	bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
+	bar:SetBackdropColor(0, 0, 0, 0.5)
+	bar:SetThumbTexture("Interface\\Buttons\\WHITE8X8")
+	bar:GetThumbTexture():SetVertexColor(0.7, 0.7, 0.7, 0.9)
+	bar:GetThumbTexture():SetSize(10, 40)
+	bar:SetValueStep(1)
+	bar:SetScript("OnValueChanged", function(_, v) scroll:SetVerticalScroll(v) end)
+	scroll:EnableMouseWheel(true)
+	scroll:SetScript("OnMouseWheel", function(_, delta) bar:SetValue(bar:GetValue() - delta * 40) end)
+
+	function f:Fit()
+		local h = math.min(contentHeight + 32, math.floor(UIParent:GetHeight() - 60))
+		self:SetHeight(h)
+		local range = math.max(0, contentHeight - (h - 32))
+		bar:SetMinMaxValues(0, range)
+		bar:SetValue(math.min(bar:GetValue(), range))
+		scroll:SetVerticalScroll(bar:GetValue())
+		bar:SetShown(range > 0)
+	end
+	return f
+end
+
 local function Build()
-	frame = CreateFrame("Frame", "TitanBarsConfig", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(320, 690)
-	frame:SetPoint("CENTER")
-	frame:SetFrameStrata("HIGH")
-	frame:SetMovable(true)
-	frame:SetClampedToScreen(true)
-	frame:EnableMouse(true)
-	frame:RegisterForDrag("LeftButton")
-	frame:SetScript("OnDragStart", frame.StartMoving)
-	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-	tinsert(UISpecialFrames, "TitanBarsConfig")
+	frame = MakeScrollWindow("TitanBarsConfig", 346, 700)
+	local c = frame.content
 
 	frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.title:SetPoint("TOP", 0, -5)
@@ -89,32 +130,32 @@ local function Build()
 	-- Bar selector
 	frame.tabs = {}
 	for id = 1, TB.NUM_BARS do
-		local tab = MakeButton(frame, tostring(id), 34, "TOPLEFT", 14 + (id - 1) * 37, -32, function()
+		local tab = MakeButton(c, tostring(id), 34, "TOPLEFT", 10 + (id - 1) * 37, -6, function()
 			selected = id
 			TB:RefreshConfig()
 		end)
 		frame.tabs[id] = tab
 	end
 
-	frame.barName = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-	frame.barName:SetPoint("TOPLEFT", 20, -64)
+	frame.barName = c:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	frame.barName:SetPoint("TOPLEFT", 16, -38)
 
-	MakeCheck(frame, "Enabled", 18, -88,
+	MakeCheck(c, "Enabled", 14, -62,
 		function() return Cfg().enabled end,
 		function(v) Cfg().enabled = v; Changed() end)
 
-	MakeSlider(frame, "Buttons", 1, 12, 1, Whole, -135, "buttons")
-	MakeSlider(frame, "Buttons per row", 1, 12, 1, Whole, -180, "perRow")
-	MakeSlider(frame, "Size", 0.3, 3, 0.05, Percent, -225, "scale")
-	MakeSlider(frame, "Button spacing", 0, 20, 1, Whole, -270, "padding")
-	MakeSlider(frame, "Opacity", 0.1, 1, 0.05, Percent, -315, "alpha")
+	MakeSlider(c, "Buttons", 1, 12, 1, Whole, -109, "buttons")
+	MakeSlider(c, "Buttons per row", 1, 12, 1, Whole, -154, "perRow")
+	MakeSlider(c, "Size", 0.3, 3, 0.05, Percent, -199, "scale")
+	MakeSlider(c, "Button spacing", 0, 20, 1, Whole, -244, "padding")
+	MakeSlider(c, "Opacity", 0.1, 1, 0.05, Percent, -289, "alpha")
 
-	local visLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	visLabel:SetPoint("TOPLEFT", 22, -345)
+	local visLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	visLabel:SetPoint("TOPLEFT", 18, -322)
 	visLabel:SetText("Show/hide rule (macro conditions, Enter to apply)")
 
-	local vis = CreateFrame("EditBox", nil, frame, "BackdropTemplate")
-	vis:SetPoint("TOPLEFT", 20, -362)
+	local vis = CreateFrame("EditBox", nil, c, "BackdropTemplate")
+	vis:SetPoint("TOPLEFT", 16, -339)
 	vis:SetSize(280, 22)
 	vis:SetAutoFocus(false)
 	vis:SetFontObject(ChatFontNormal)
@@ -131,26 +172,26 @@ local function Build()
 	vis.Refresh = function() vis:SetText(Cfg().visibility or "") end
 	table.insert(controls, vis)
 
-	local visHelp = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	visHelp:SetPoint("TOPLEFT", 22, -388)
+	local visHelp = c:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	visHelp:SetPoint("TOPLEFT", 18, -365)
 	visHelp:SetWidth(280)
 	visHelp:SetJustifyH("LEFT")
 	visHelp:SetText("e.g.  [combat] show; hide   or   [mod:shift] show; hide")
 
-	frame.lockBtn = MakeButton(frame, "Unlock", 90, "TOPLEFT", 18, -414, function()
+	frame.lockBtn = MakeButton(c, "Unlock", 90, "TOPLEFT", 14, -390, function()
 		TB:SetUnlocked(not TB.unlocked)
 	end)
-	frame.bindBtn = MakeButton(frame, "Keybind mode", 110, "TOPLEFT", 112, -414, function()
+	frame.bindBtn = MakeButton(c, "Keybind mode", 110, "TOPLEFT", 108, -390, function()
 		TB:SetBindMode(not TB.bindMode)
 	end)
-	MakeButton(frame, "Reset bar", 80, "TOPLEFT", 226, -414, function()
+	MakeButton(c, "Reset bar", 80, "TOPLEFT", 222, -390, function()
 		if InCombatLockdown() then return end
 		TB:ResetBar(selected)
 		Changed()
 		TB:RefreshConfig()
 	end)
 
-	MakeCheck(frame, "Hide Blizzard action bars + art (needs /reload)", 18, -448,
+	MakeCheck(c, "Hide Blizzard action bars + art (needs /reload)", 14, -424,
 		function() return TB.db.hideBlizzard end,
 		function(v)
 			TB.db.hideBlizzard = v
@@ -158,28 +199,28 @@ local function Build()
 		end)
 
 	-- Bags and menu buttons
-	local extrasLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-	extrasLabel:SetPoint("TOPLEFT", 20, -484)
+	local extrasLabel = c:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	extrasLabel:SetPoint("TOPLEFT", 16, -462)
 	extrasLabel:SetText("Bags and menu buttons")
 	for n, info in ipairs(TB.EXTRAS) do
-		MakeSlider(frame, info.label .. " size", 0.3, 3, 0.05, Percent, -500 - n * 45, "scale",
+		MakeSlider(c, info.label .. " size", 0.3, 3, 0.05, Percent, -460 - n * 48, "scale",
 			function() return TB:ExtraCfg(info.key) end,
 			function() TB:ApplyExtra(info) end,
 			function() local f = _G[info.name]; return f and f:GetScale() end)
 	end
-	MakeCheck(frame, "Hide bag + menu button art (needs /reload)", 18, -584,
+	MakeCheck(c, "Hide bag + menu button art (needs /reload)", 14, -596,
 		function() return TB.db.hideExtraArt end,
 		function(v)
 			TB.db.hideExtraArt = v
 			TB:Print("Type /reload to apply.")
 		end)
 
-	MakeCheck(frame, "Show cooldown numbers on buttons", 18, -610,
+	MakeCheck(c, "Show cooldown numbers on buttons", 14, -622,
 		function() return GetCVarBool("countdownForCooldowns") end,
 		function(v) SetCVar("countdownForCooldowns", v and "1" or "0") end)
 
-	local help = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	help:SetPoint("TOPLEFT", 22, -642)
+	local help = c:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	help:SetPoint("TOPLEFT", 18, -656)
 	help:SetWidth(280)
 	help:SetJustifyH("LEFT")
 	help:SetText("Unlock, then drag bars, bags and menu buttons to move them; mouse wheel to resize. Keybind mode: hover a button and press a key. Pet and stance bars stay Blizzard's: move them in Edit Mode.")
@@ -201,6 +242,7 @@ end
 function TB:OpenConfig(id)
 	if not frame then Build() end
 	if id then selected = id end
+	frame:Fit()
 	frame:Show()
 	self:RefreshConfig()
 end
