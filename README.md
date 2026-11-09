@@ -5,7 +5,7 @@ They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
 |-------|--------------|---------|
-| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars plus a forms / stance bar you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. | `/tb` |
+| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. | `/tb` |
 | **TitanTools** | Buff reminder (Mark of the Wild, Thorns, Omen of Clarity) and a "not in Bear Form" warning, a target-of-target frame for tanking, auto-repair and junk selling. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar. | `/tf` |
 
@@ -24,7 +24,7 @@ They were written against Blizzard's own Forever-branch UI source.
 On first login it copies your existing keybinds over (key `1` still fires bar 1 button 1, etc.),
 so nothing changes until you start moving things.
 
-- `/tb` opens the settings window. Pick a bar (1-9) at the top, then set:
+- `/tb` opens the settings window. Pick a bar (1-8) at the top, then set:
   enabled, number of buttons, buttons per row, size, spacing, opacity, show/hide rule.
 - `/tb unlock` shows a blue handle on each bar, plus the bag bar and the menu buttons
   (character, spellbook, professions...). **Drag** to move, **mouse wheel** to resize
@@ -52,15 +52,10 @@ if you disable the addon. "Cast on key down" (Options > Gameplay > Combat) is re
 hand them back to Edit Mode. Their sizes are also in the `/tb` window. Their frame art is hidden by
 default; untick "Hide bag + menu button art" and `/reload` to get it back.
 
-**Bar 9 (forms / stance):** your Bear, Cat, Travel and other forms, with Blizzard's stance bar hidden.
-It only shows as many buttons as you have forms. Your Blizzard stance keybinds are copied over once;
-bind new ones in keybind mode like any other bar. Clicking your current form drops it, same as Blizzard's.
-Turn bar 9 off to get Blizzard's stance bar back (after `/reload`).
-
 **Cooldown numbers:** tick "Show cooldown numbers on buttons" in `/tb` for a countdown on every button.
 This is Blizzard's own setting, so it also shows in Options.
 
-**Not replaced:** the pet bar, extra action button and vehicle bar stay Blizzard's.
+**Not replaced:** the pet bar, stance / forms bar, extra action button and vehicle bar stay Blizzard's.
 Move those in Edit Mode.
 
 ## TitanFrames

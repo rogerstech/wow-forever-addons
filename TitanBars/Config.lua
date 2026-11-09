@@ -89,7 +89,7 @@ local function Build()
 	-- Bar selector
 	frame.tabs = {}
 	for id = 1, TB.NUM_BARS do
-		local tab = MakeButton(frame, tostring(id), 30, "TOPLEFT", 14 + (id - 1) * 33, -32, function()
+		local tab = MakeButton(frame, tostring(id), 34, "TOPLEFT", 14 + (id - 1) * 37, -32, function()
 			selected = id
 			TB:RefreshConfig()
 		end)
@@ -182,7 +182,7 @@ local function Build()
 	help:SetPoint("TOPLEFT", 22, -642)
 	help:SetWidth(280)
 	help:SetJustifyH("LEFT")
-	help:SetText("Unlock, then drag bars, bags and menu buttons to move them; mouse wheel to resize. Keybind mode: hover a button and press a key. Bar 9 is your forms / stance bar. The pet bar stays Blizzard's: move it in Edit Mode.")
+	help:SetText("Unlock, then drag bars, bags and menu buttons to move them; mouse wheel to resize. Keybind mode: hover a button and press a key. Pet and stance bars stay Blizzard's: move them in Edit Mode.")
 end
 
 function TB:RefreshConfig()

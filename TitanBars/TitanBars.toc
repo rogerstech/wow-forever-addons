@@ -1,14 +1,13 @@
 ## Interface: 16001
 ## Title: TitanBars
-## Notes: Bartender-style action bars: hide the Blizzard bars and art, move, resize and lay out your own bars, bind keys by hovering, plus a forms / stance bar and cooldown numbers.
+## Notes: Bartender-style action bars: hide the Blizzard bars and art, move, resize and lay out your own bars, and bind keys by hovering.
 ## Author: Adam Rogers
-## Version: 1.2.4
+## Version: 1.3.0
 ## SavedVariables: TitanBarsDB
 ## IconTexture: Interface\Icons\INV_Misc_Gear_01
 
 Core.lua
 Bars.lua
-Stance.lua
 Bindings.lua
 Extras.lua
 Config.lua

@@ -2,13 +2,11 @@
 local ADDON, TB = ...
 _G.TitanBars = TB
 
-TB.NUM_BARS = 9
-TB.STANCE_BAR = 9
+TB.NUM_BARS = 8
 TB.MAX_BUTTONS = 12
 
 -- Which action slots each bar shows (page N = slots (N-1)*12+1 .. N*12) and which
 -- Blizzard key binding it inherits on first load. Bar 1 also pages with stance/forms.
--- Bar 9 is the stance bar: it shows your forms instead of action slots.
 TB.BAR_INFO = {
 	{ page = 1,  binding = "ACTIONBUTTON",          label = "Main bar" },
 	{ page = 6,  binding = "MULTIACTIONBAR1BUTTON", label = "Bottom left" },
@@ -18,19 +16,17 @@ TB.BAR_INFO = {
 	{ page = 13, binding = "MULTIACTIONBAR5BUTTON", label = "Bar 6" },
 	{ page = 14, binding = "MULTIACTIONBAR6BUTTON", label = "Bar 7" },
 	{ page = 15, binding = "MULTIACTIONBAR7BUTTON", label = "Bar 8" },
-	{ stance = true, binding = "SHAPESHIFTBUTTON",  label = "Forms / stance" },
 }
 
 TB.DEFAULT_VISIBILITY = "[petbattle] hide; show"
 local DEFAULT_VISIBILITY = TB.DEFAULT_VISIBILITY
 
 local function BarDefaults(id)
-	-- Bars 1-3 start stacked bottom-centre, 4-5 as columns on the right, 6-8 off,
-	-- 9 (forms) above bar 3.
+	-- Bars 1-3 start stacked bottom-centre, 4-5 as columns on the right, 6-8 off.
 	-- pos (bar centre, in UIParent units from the bottom-left) is set on first layout.
 	return {
-		enabled = id <= 5 or id == TB.STANCE_BAR,
-		buttons = id == TB.STANCE_BAR and 10 or 12,
+		enabled = id <= 5,
+		buttons = 12,
 		perRow = (id == 4 or id == 5) and 1 or 12,
 		scale = 1,
 		padding = 4,
@@ -141,10 +137,6 @@ function TB:HideBlizzard()
 			-- invisible even when Blizzard code calls :Show() on it.
 			bar:SetParent(hider)
 		end
-	end
-	-- Blizzard's stance bar only goes when ours (bar 9) is on.
-	if StanceBar and self.db.bars[self.STANCE_BAR].enabled then
-		StanceBar:SetParent(hider)
 	end
 end
 
