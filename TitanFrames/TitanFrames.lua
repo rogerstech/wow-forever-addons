@@ -1,4 +1,5 @@
--- TitanFrames: move and resize the minimap, party frames, raid frames and XP bar.
+-- TitanFrames: move and resize the minimap, party frames, raid frames and XP bar,
+-- and show map coordinates on the minimap.
 -- Once you move or resize a frame here, TitanFrames owns its size and position and
 -- re-applies them whenever Blizzard (Edit Mode, roster changes) puts it back.
 local ADDON, TF = ...
@@ -233,6 +234,56 @@ function TF:ResetFrame(info)
 end
 
 ---------------------------------------------------------------------------
+-- Map coordinates at the bottom of the minimap. Blank inside dungeons, where the
+-- game doesn't give a position.
+---------------------------------------------------------------------------
+local coords
+
+function TF:CoordsEnabled()
+	local cfg = self:Cfg("coords")
+	return cfg.enabled ~= false
+end
+
+local function UpdateCoords()
+	local text = ""
+	local mapID = C_Map.GetBestMapForUnit("player")
+	local pos = mapID and C_Map.GetPlayerMapPosition(mapID, "player")
+	if pos then
+		local x, y = pos:GetXY()
+		if x and y and (x > 0 or y > 0) then
+			text = ("%.1f, %.1f"):format(x * 100, y * 100)
+		end
+	end
+	coords.text:SetText(text)
+	coords:SetShown(text ~= "")
+end
+
+function TF:UpdateCoords()
+	if not Minimap then return end
+	if not coords then
+		coords = CreateFrame("Frame", nil, Minimap)
+		coords:SetSize(80, 16)
+		coords:SetPoint("BOTTOM", Minimap, "BOTTOM", 0, 6)
+		coords:SetFrameLevel(Minimap:GetFrameLevel() + 5)
+		coords.bg = coords:CreateTexture(nil, "BACKGROUND")
+		coords.bg:SetAllPoints()
+		coords.bg:SetColorTexture(0, 0, 0, 0.5)
+		coords.text = coords:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		coords.text:SetPoint("CENTER")
+	end
+	if self.coordsTicker then
+		self.coordsTicker:Cancel()
+		self.coordsTicker = nil
+	end
+	if self:CoordsEnabled() then
+		self.coordsTicker = C_Timer.NewTicker(0.2, function() pcall(UpdateCoords) end)
+		pcall(UpdateCoords)
+	else
+		coords:Hide()
+	end
+end
+
+---------------------------------------------------------------------------
 -- Settings window (/tf)
 ---------------------------------------------------------------------------
 local win
@@ -240,7 +291,7 @@ local refreshing = false
 
 local function BuildWindow()
 	win = CreateFrame("Frame", "TitanFramesConfig", UIParent, "BasicFrameTemplateWithInset")
-	win:SetSize(320, 420)
+	win:SetSize(320, 450)
 	win:SetPoint("CENTER")
 	win:SetFrameStrata("HIGH")
 	win:SetMovable(true)
@@ -283,6 +334,22 @@ local function BuildWindow()
 		win.sliders[n] = s
 	end
 
+	local c = CreateFrame("CheckButton", nil, win)
+	c:SetSize(24, 24)
+	c:SetPoint("TOPLEFT", 20, -312)
+	c:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
+	c:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
+	c:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight", "ADD")
+	c:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
+	c.text = c:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	c.text:SetPoint("LEFT", c, "RIGHT", 4, 0)
+	c.text:SetText("Show map coordinates on the minimap")
+	c:SetScript("OnClick", function(self)
+		TF:Cfg("coords").enabled = self:GetChecked() and true or false
+		TF:UpdateCoords()
+	end)
+	win.coordsCheck = c
+
 	win.lockBtn = CreateFrame("Button", nil, win, "UIPanelButtonTemplate")
 	win.lockBtn:SetSize(120, 22)
 	win.lockBtn:SetPoint("BOTTOM", 0, 50)
@@ -303,6 +370,7 @@ function TF:RefreshWindow()
 		s:SetValue(scale)
 		s.Text:SetText(("%s: %d%%"):format(s.info.label, scale * 100 + 0.5))
 	end
+	win.coordsCheck:SetChecked(self:CoordsEnabled())
 	win.lockBtn:SetText(self.unlocked and "Lock frames" or "Unlock frames")
 	refreshing = false
 end
@@ -333,6 +401,7 @@ events:SetScript("OnEvent", function(_, event, arg1)
 	elseif event == "PLAYER_LOGIN" then
 		TF.ready = true
 		TF:Setup()
+		TF:UpdateCoords()
 		RegisterStateDriver(guard, "combat", "[combat] 1; 0")
 		if EventRegistry then
 			EventRegistry:RegisterCallback("EditMode.Exit", function() TF:ApplyAll() end, TF)

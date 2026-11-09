@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: TitanFrames
-## Notes: Move and resize the minimap, party frames, raid frames and XP bar.
+## Notes: Move and resize the minimap, party frames, raid frames and XP bar. Map coordinates on the minimap.
 ## Author: Adam Rogers
-## Version: 1.1.3
+## Version: 1.2.0
 ## SavedVariables: TitanFramesDB
 ## IconTexture: Interface\Icons\INV_Misc_Map_01
 

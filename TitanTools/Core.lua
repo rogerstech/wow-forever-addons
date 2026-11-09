@@ -7,6 +7,7 @@ local DEFAULTS = {
 	tot = { enabled = true, scale = 1 },
 	aggro = { enabled = true, groupOnly = false },
 	vendor = { repair = true, junk = true },
+	quest = { enabled = true },
 }
 
 local function Merge(dst, src)
@@ -181,7 +182,7 @@ end
 
 local function Build()
 	frame = CreateFrame("Frame", "TitanToolsConfig", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(320, 440)
+	frame:SetSize(320, 520)
 	frame:SetPoint("CENTER")
 	frame:SetFrameStrata("HIGH")
 	frame:SetMovable(true)
@@ -222,16 +223,21 @@ local function Build()
 	MakeCheck(frame, "Sell grey (junk) items automatically", -320,
 		function() return v.junk end, function(on) v.junk = on end)
 
+	local q = TT.db.quest
+	Heading(frame, "Quests", -354)
+	MakeCheck(frame, "Accept and turn in quests (hold Shift to skip)", -376,
+		function() return q.enabled end, function(on) q.enabled = on end)
+
 	frame.lockBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 	frame.lockBtn:SetSize(110, 22)
-	frame.lockBtn:SetPoint("TOPLEFT", 18, -356)
+	frame.lockBtn:SetPoint("TOPLEFT", 18, -412)
 	frame.lockBtn:SetScript("OnClick", function() TT:SetUnlocked(not TT.unlocked) end)
 
 	local help = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	help:SetPoint("TOPLEFT", 22, -386)
+	help:SetPoint("TOPLEFT", 22, -442)
 	help:SetWidth(280)
 	help:SetJustifyH("LEFT")
-	help:SetText("Unlock, then drag the reminder and target-of-target frames; mouse wheel to resize, right-click to reset.")
+	help:SetText("Unlock, then drag the reminder and target-of-target frames; mouse wheel to resize, right-click to reset.\n\nRaid marker keys: Options > Keybindings > AddOns > TitanTools.")
 end
 
 function TT:RefreshConfig()
@@ -282,6 +288,8 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		TT:SetupToT()
 		TT:SetupVendor()
 		TT:SetupAggro()
+		TT:SetupQuests()
+		TT:SetupMail()
 	elseif event == "PLAYER_REGEN_DISABLED" then
 		if TT.unlocked then TT:SetUnlocked(false) end
 	elseif event == "PLAYER_REGEN_ENABLED" then
@@ -300,11 +308,14 @@ SlashCmdList.TITANTOOLS = function(msg)
 		TT:SetUnlocked(true)
 	elseif cmd == "lock" then
 		TT:SetUnlocked(false)
+	elseif cmd == "clearmarks" then
+		TT:ClearMarks()
 	elseif cmd == "" or cmd == "config" then
 		TT:ToggleConfig()
 	else
 		TT:Print("/ttools  - settings window")
 		TT:Print("/ttools unlock  - move and resize the reminder and target-of-target frames")
 		TT:Print("/ttools lock  - lock them")
+		TT:Print("/ttools clearmarks  - remove all raid marks")
 	end
 end
