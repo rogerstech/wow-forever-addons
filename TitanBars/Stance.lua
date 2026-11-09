@@ -42,34 +42,63 @@ function TB:CreateStanceButton(bar, i)
 		TB:OnButtonEnter(self)
 	end)
 	btn:HookScript("OnLeave", function() GameTooltip:Hide() end)
+
+	bar:SetFrameRef("button" .. i, btn)
+	bar:SetFrameRef("key" .. i, key)
 	return btn
+end
+
+-- Runs in the secure environment whenever your form changes, in or out of combat:
+-- the button for the form you're in becomes /cancelform, the rest cast their form.
+-- (A two-line "/cancelform [form:N]" + "/cast [noform:N]" macro doesn't work: the
+-- form drops before the second line is checked, so it shifts you straight back.)
+local FORM_SNIPPET = [[
+	local form = tonumber(newstate) or 0
+	for i = 1, 12 do
+		local text = (i == form) and "/cancelform" or self:GetAttribute("cast" .. i)
+		self:GetFrameRef("button" .. i):SetAttribute("macrotext", text)
+		self:GetFrameRef("key" .. i):SetAttribute("macrotext", text)
+	end
+]]
+
+local function FormDriver()
+	local parts = {}
+	for i = 1, 12 do parts[i] = ("[form:%d] %d"):format(i, i) end
+	parts[13] = "0"
+	return table.concat(parts, "; ")
+end
+
+function TB:SetupStanceDriver(bar)
+	bar:SetAttribute("_onstate-form", FORM_SNIPPET)
+	RegisterStateDriver(bar, "form", FormDriver())
 end
 
 local warned = {}
 
--- What each button does. Casting a form you're already in doesn't drop it on this
--- client, so each button is a small macro: leave the form if you're in it, else cast it.
--- [form:N] is checked when you press, so this works in combat. Secure attributes,
--- so they're set out of combat only (you can't learn a form in combat anyway).
+-- The cast command for each button. Secure attributes, so out of combat only
+-- (you can't learn a form in combat anyway). The form snippet above picks between
+-- this and /cancelform.
 function TB:UpdateStanceSpells()
 	local bar = self.bars[self.STANCE_BAR]
 	if not bar then return end
 	self:RunOutOfCombat("stanceSpells", function()
 		local n = TB.NumForms()
 		for i, btn in ipairs(bar.buttons) do
-			local macro
+			local cast
 			if i <= n then
 				local spellID = select(4, GetShapeshiftFormInfo(i))
 				local spellName = spellID and C_Spell.GetSpellName(spellID)
 				if spellName then
-					macro = ("/cancelform [form:%d]\n/cast [noform:%d] %s"):format(i, i, spellName)
+					cast = "/cast " .. spellName
 				elseif not warned[i] then
 					warned[i] = true
 					TB:Print(("Couldn't read the spell for form %d, so its button won't work. Please report this."):format(i))
 				end
 			end
-			btn:SetAttribute("macrotext", macro)
-			btn.titanKey:SetAttribute("macrotext", macro)
+			bar:SetAttribute("cast" .. i, cast)
+			local text = (i == GetShapeshiftForm()) and "/cancelform" or cast
+			btn:SetAttribute("macrotext", text)
+			btn.titanKey:SetAttribute("macrotext", text)
 		end
 		TB:LayoutBar(TB.STANCE_BAR)
 	end, true)

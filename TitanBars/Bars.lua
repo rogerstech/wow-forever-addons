@@ -84,6 +84,7 @@ function TB:CreateBars()
 			for i = 1, self.MAX_BUTTONS do
 				bar.buttons[i] = self:CreateStanceButton(bar, i)
 			end
+			self:SetupStanceDriver(bar)
 		else
 			for i = 1, self.MAX_BUTTONS do
 				bar.buttons[i] = CreateButton(bar, i)
