@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: TitanTools
-## Notes: Buff reminder (Mark of the Wild, Thorns, Omen of Clarity, Bear Form warning), target-of-target frame, nameplate aggro colours, auto-repair and junk selling, raid-marker keys, quest auto-accept and turn-in, open-all mail.
+## Notes: Buff reminder (Mark of the Wild, Thorns, Omen of Clarity, Bear Form warning), target-of-target frame, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, open-all mail.
 ## Author: Adam Rogers
-## Version: 1.2.1
+## Version: 1.2.2
 ## SavedVariables: TitanToolsDB
 ## IconTexture: Interface\Icons\Ability_Racial_BearForm
 
@@ -11,6 +11,5 @@ Reminders.lua
 Vendor.lua
 TargetTarget.lua
 Aggro.lua
-Markers.lua
 Quests.lua
 Mail.lua

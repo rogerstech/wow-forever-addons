@@ -6,7 +6,7 @@ They were written against Blizzard's own Forever-branch UI source.
 | Addon | What it does | Command |
 |-------|--------------|---------|
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. | `/tb` |
-| **TitanTools** | Buff reminder (Mark of the Wild, Thorns, Omen of Clarity) and a "not in Bear Form" warning, a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, raid-marker keys, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
+| **TitanTools** | Buff reminder (Mark of the Wild, Thorns, Omen of Clarity) and a "not in Bear Form" warning, a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. | `/tf` |
 
 ## Install
@@ -90,10 +90,6 @@ handler puts them back in your spot in case anything moved them.
   colour them while in a group.
 - **Vendors:** opening a vendor repairs everything and sells grey items (12 per visit, the buyback
   limit), then prints what it cost and earned.
-- **Raid-marker keys:** set them in Options > Keybindings > AddOns > TitanTools. "Mark skull" and
-  "Mark X" mark the mob under the mouse, or your target if the mouse isn't on one; pressing it again
-  removes the mark. "Clear all raid marks" (or `/ttools clearmarks`) removes every mark. In a raid you
-  need lead or assist to mark.
 - **Quests:** accepts quests and turns in finished ones as soon as you talk to the NPC. Hold Shift
   while clicking the NPC to do it yourself. Low-level (grey) quests are left alone. When a quest
   offers a choice of rewards it stops, marks the one that sells for the most with a gold coin, and

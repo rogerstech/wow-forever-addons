@@ -278,7 +278,7 @@ local function Build()
 	help:SetPoint("TOPLEFT", 22, -416)
 	help:SetWidth(280)
 	help:SetJustifyH("LEFT")
-	help:SetText("Unlock, then drag the reminder and target-of-target frames; mouse wheel to resize, right-click to reset.\n\nRaid marker keys: Options > Keybindings > AddOns > TitanTools.")
+	help:SetText("Unlock, then drag the reminder and target-of-target frames; mouse wheel to resize, right-click to reset.")
 end
 
 function TT:RefreshConfig()
@@ -350,14 +350,11 @@ SlashCmdList.TITANTOOLS = function(msg)
 		TT:SetUnlocked(true)
 	elseif cmd == "lock" then
 		TT:SetUnlocked(false)
-	elseif cmd == "clearmarks" then
-		TT:ClearMarks()
 	elseif cmd == "" or cmd == "config" then
 		TT:ToggleConfig()
 	else
 		TT:Print("/ttools  - settings window")
 		TT:Print("/ttools unlock  - move and resize the reminder and target-of-target frames")
 		TT:Print("/ttools lock  - lock them")
-		TT:Print("/ttools clearmarks  - remove all raid marks")
 	end
 end
