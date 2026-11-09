@@ -17,7 +17,7 @@ function TB:CreateStanceButton(bar, i)
 	btn:SetID(i)
 	btn.titanBar, btn.titanIndex = bar.id, i
 	btn:RegisterForClicks("AnyUp")
-	btn:SetAttribute("type", "spell")
+	btn:SetAttribute("type", "macro")
 	-- Mouse clicks only send the release. Without this, "cast on key down" makes the
 	-- secure template wait for a press that never comes, and the click does nothing.
 	btn:SetAttribute("useOnKeyDown", false)
@@ -26,7 +26,7 @@ function TB:CreateStanceButton(bar, i)
 	local key = CreateFrame("Button", name .. "Key", btn, "SecureActionButtonTemplate")
 	key:SetSize(1, 1)
 	key:EnableMouse(false)
-	key:SetAttribute("type", "spell")
+	key:SetAttribute("type", "macro")
 	key:RegisterForClicks("AnyDown", "AnyUp")
 	key:HookScript("OnClick", function(_, _, down)
 		btn:SetButtonState(down and "PUSHED" or "NORMAL")
@@ -47,24 +47,29 @@ end
 
 local warned = {}
 
--- Which spell each button casts. Secure attributes, so out of combat only
--- (you can't learn a form in combat anyway).
+-- What each button does. Casting a form you're already in doesn't drop it on this
+-- client, so each button is a small macro: leave the form if you're in it, else cast it.
+-- [form:N] is checked when you press, so this works in combat. Secure attributes,
+-- so they're set out of combat only (you can't learn a form in combat anyway).
 function TB:UpdateStanceSpells()
 	local bar = self.bars[self.STANCE_BAR]
 	if not bar then return end
 	self:RunOutOfCombat("stanceSpells", function()
 		local n = TB.NumForms()
 		for i, btn in ipairs(bar.buttons) do
-			local spellID
+			local macro
 			if i <= n then
-				spellID = select(4, GetShapeshiftFormInfo(i))
-				if not spellID and not warned[i] then
+				local spellID = select(4, GetShapeshiftFormInfo(i))
+				local spellName = spellID and C_Spell.GetSpellName(spellID)
+				if spellName then
+					macro = ("/cancelform [form:%d]\n/cast [noform:%d] %s"):format(i, i, spellName)
+				elseif not warned[i] then
 					warned[i] = true
 					TB:Print(("Couldn't read the spell for form %d, so its button won't work. Please report this."):format(i))
 				end
 			end
-			btn:SetAttribute("spell", spellID)
-			btn.titanKey:SetAttribute("spell", spellID)
+			btn:SetAttribute("macrotext", macro)
+			btn.titanKey:SetAttribute("macrotext", macro)
 		end
 		TB:LayoutBar(TB.STANCE_BAR)
 	end, true)

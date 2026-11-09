@@ -2,7 +2,7 @@
 ## Title: TitanBars
 ## Notes: Bartender-style action bars: hide the Blizzard bars and art, move, resize and lay out your own bars, bind keys by hovering, plus a forms / stance bar and cooldown numbers.
 ## Author: Adam Rogers
-## Version: 1.2.1
+## Version: 1.2.2
 ## SavedVariables: TitanBarsDB
 ## IconTexture: Interface\Icons\INV_Misc_Gear_01
 
