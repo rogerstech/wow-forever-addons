@@ -2,7 +2,7 @@
 ## Title: TitanQuests
 ## Notes: A cleaner quest tracker that replaces Blizzard's. Collapse quests and zones, minimize it with one click or a key, and it tucks itself away in dungeons.
 ## Author: Adam Rogers
-## Version: 1.0.0
+## Version: 1.0.1
 ## SavedVariables: TitanQuestsDB
 ## IconTexture: Interface\Icons\INV_Misc_Book_08
 

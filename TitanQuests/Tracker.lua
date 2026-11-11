@@ -140,11 +140,12 @@ local function AcquireRow()
 		r.check = r:CreateTexture(nil, "ARTWORK")
 		r.check:SetSize(12, 12)
 		r.check:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
-		r.text = r:CreateFontString(nil, "OVERLAY")
+		-- A font string needs a font before any SetText, even an empty one.
+		r.text = r:CreateFontString(nil, "OVERLAY", "TitanQuestsLineFont")
 		r.text:SetJustifyH("LEFT")
 		r.text:SetJustifyV("TOP")
 		r.text:SetWordWrap(true)
-		r.right = r:CreateFontString(nil, "OVERLAY")
+		r.right = r:CreateFontString(nil, "OVERLAY", "TitanQuestsLineFont")
 		r.right:SetJustifyH("RIGHT")
 		local hl = r:CreateTexture(nil, "HIGHLIGHT")
 		hl:SetAllPoints()
@@ -262,7 +263,7 @@ function TQ:Refresh()
 		footer:Hide()
 	end
 	if total == 0 then
-		footer:SetText(db.showAll and "Your quest log is empty." or "No tracked quests. Shift-click a quest in your log to track it, or tick \"Show every quest\" in /tquests.")
+		footer:SetText(db.showAll and "Your quest log is empty." or "No tracked quests. Shift-click a quest in your log to track it, or tick \"Every quest in the log\" in /tquests.")
 		footer:SetWidth(db.width - PAD * 2 - QUEST_INDENT)
 		footer:ClearAllPoints()
 		footer:SetPoint("TOPLEFT", body, "TOPLEFT", PAD + QUEST_INDENT, -6)
@@ -287,7 +288,9 @@ function TQ:LayoutQuest(q, y)
 	local text = q.title
 	if db.levels then
 		local lr, lg, lb = DifficultyColor(q.difficulty)
-		text = ("|cff%02x%02x%02x[%d]|r %s"):format(lr * 255, lg * 255, lb * 255, q.level, q.title)
+		-- %x and %d need whole numbers; colours come back as fractions.
+		local function Hex(v) return math.floor(v * 255 + 0.5) end
+		text = ("|cff%02x%02x%02x[%d]|r %s"):format(Hex(lr), Hex(lg), Hex(lb), q.level or 0, q.title)
 	end
 	local red, green, blue = 1, 0.82, 0
 	local right
