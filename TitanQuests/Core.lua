@@ -58,10 +58,22 @@ local hider = CreateFrame("Frame")
 hider:Hide()
 local blizzParent
 
+local hooked
 function TQ:UpdateBlizzard()
 	local f = ObjectiveTrackerFrame
 	if not f then return end
-	self:RunOutOfCombat("blizzard", function()
+	if not hooked then
+		hooked = true
+		-- Blizzard's right-side layout (ManagedFrameContainerMixin:UpdateFrame) parents
+		-- the tracker back to its container, e.g. when a quest is accepted. Hide it again
+		-- on the next frame so we don't run inside Blizzard's layout code.
+		hooksecurefunc(f, "SetParent", function(_, parent)
+			if parent ~= hider and TQ.db.hideBlizzard then
+				C_Timer.After(0, function() TQ:UpdateBlizzard() end)
+			end
+		end)
+	end
+	local function Apply()
 		if self.db.hideBlizzard then
 			if f:GetParent() ~= hider then
 				blizzParent = f:GetParent()
@@ -71,7 +83,13 @@ function TQ:UpdateBlizzard()
 			f:SetParent(blizzParent or UIParent)
 			f:Show()
 		end
-	end)
+	end
+	-- The tracker isn't normally protected, so it can be hidden mid-fight too.
+	if InCombatLockdown() and f:IsProtected() then
+		pending.blizzard = Apply
+	else
+		Apply()
+	end
 end
 
 ---------------------------------------------------------------------------
