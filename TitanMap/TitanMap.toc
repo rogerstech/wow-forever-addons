@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: TitanMap
+## Notes: A see-through zone map overlay you can play through: your position, quest markers and quest areas. Toggle it with a key.
+## Author: Adam Rogers
+## Version: 1.0.0
+## SavedVariables: TitanMapDB
+## OptionalDeps: TitanQuests
+## IconTexture: Interface\Icons\INV_Misc_Map02
+
+Core.lua
+Map.lua
+Config.lua

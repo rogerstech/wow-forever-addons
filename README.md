@@ -1,6 +1,6 @@
 # WoW Forever Addons
 
-Four addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Five addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
@@ -9,6 +9,7 @@ They were written against Blizzard's own Forever-branch UI source.
 | **TitanTools** | Buff reminder (Mark of the Wild, Thorns, Omen of Clarity) and a "not in Bear Form" warning, a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. | `/tf` |
 | **TitanQuests** | A cleaner quest tracker that replaces Blizzard's. Quests grouped by zone, fold quests or zones away, quest item buttons, and one button (or key) to minimize it. Minimizes itself in dungeons and raids. | `/tquests` |
+| **TitanMap** | A see-through map of your zone that sits on your screen while you play: your arrow, quest markers and shaded quest areas. Clicks go straight through it. Toggle with a key. | `/tmap` |
 
 ## Download
 
@@ -20,11 +21,11 @@ Each addon works on its own, so install only the ones you want.
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars`, `TitanFrames`, `TitanTools` and `TitanQuests` folders into
+2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests` and `TitanMap` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
-3. Start the game. At character select, click **Menu** (top of the screen) > **AddOns** and make sure all four are ticked
+3. Start the game. At character select, click **Menu** (top of the screen) > **AddOns** and make sure the ones you want are ticked
    (tick "Load out of date AddOns" if a patch has bumped the interface number).
 
 ## TitanBars
@@ -140,6 +141,23 @@ Blizzard's. The quest log itself (on the map) is still Blizzard's.
   mid-fight they catch up when combat ends, and you can't scroll the list in combat while one is showing.
 - **Long lists:** past the max height it shows "N more"; mouse wheel over the list scrolls.
 - **Blizzard's tracker back:** untick "Hide Blizzard's quest tracker" (or disable TitanQuests).
+
+## TitanMap
+
+A faded map of the zone you're in, drawn over the game so you can keep the whole picture in view and
+still play. Nothing on it takes the mouse: clicks go through to the world, so you can still target
+and loot under it.
+
+- **Toggle:** set a key in Options > Keybindings > AddOns > TitanMap, type `/tmap`, or click the map
+  icon on the TitanQuests title bar.
+- **What's on it:** your arrow (points the way you face), a **gold dot** for each quest in progress and
+  a **green dot** for each one ready to turn in, with the quest name beside it, and the shaded areas
+  where a quest's objectives are. It follows you from zone to zone and into cities.
+- **Moving and sizing:** `/tmap unlock`, then drag the green box and use the mouse wheel to resize
+  (Shift for fine steps). Right-click the box or `/tmap lock` when done.
+- **Settings** (`/tmap config`): map opacity and marker opacity (separately), width, only tracked
+  quests or all, quest names, quest areas, and hide during combat or in dungeons.
+- In dungeons the game doesn't give addons your position, so there's no arrow there.
 
 ## Notes
 
