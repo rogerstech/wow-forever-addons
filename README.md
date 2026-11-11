@@ -10,6 +10,13 @@ They were written against Blizzard's own Forever-branch UI source.
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. | `/tf` |
 | **TitanQuests** | A cleaner quest tracker that replaces Blizzard's. Quests grouped by zone, fold quests or zones away, quest item buttons, and one button (or key) to minimize it. Minimizes itself in dungeons and raids. | `/tquests` |
 
+## Download
+
+**[Download the latest version (zip)](https://github.com/rogerstech/wow-forever-addons/releases/latest/download/WoW-Forever-Addons.zip)**
+· [all releases](https://github.com/rogerstech/wow-forever-addons/releases)
+
+Each addon works on its own, so install only the ones you want.
+
 ## Install
 
 1. Close the game.
@@ -138,5 +145,6 @@ Blizzard's. The quest log itself (on the map) is still Blizzard's.
 
 - Nothing can move or bind action buttons during combat. That is a Blizzard rule. Changes you make
   then are queued until combat ends.
-- Built from reading the Forever UI source, not yet played in-game. If you hit a Lua error, install
-  BugSack/BugGrabber and send the error text.
+- Written against Blizzard's Forever UI source and played on a druid tank. TitanBars, TitanFrames and
+  TitanTools are in daily use; TitanQuests is new. If you hit a Lua error, install BugSack/BugGrabber
+  and open an issue with the error text.
