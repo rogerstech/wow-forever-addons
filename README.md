@@ -1,6 +1,6 @@
 # WoW Forever Addons
 
-Three addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Four addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
@@ -8,15 +8,16 @@ They were written against Blizzard's own Forever-branch UI source.
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. | `/tb` |
 | **TitanTools** | Buff reminder (Mark of the Wild, Thorns, Omen of Clarity) and a "not in Bear Form" warning, a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. | `/tf` |
+| **TitanQuests** | A cleaner quest tracker that replaces Blizzard's. Quests grouped by zone, fold quests or zones away, quest item buttons, and one button (or key) to minimize it. Minimizes itself in dungeons and raids. | `/tquests` |
 
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars`, `TitanFrames` and `TitanTools` folders into
+2. Copy the `TitanBars`, `TitanFrames`, `TitanTools` and `TitanQuests` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
-3. Start the game. At character select, click **Menu** (top of the screen) > **AddOns** and make sure all three are ticked
+3. Start the game. At character select, click **Menu** (top of the screen) > **AddOns** and make sure all four are ticked
    (tick "Load out of date AddOns" if a patch has bumped the interface number).
 
 ## TitanBars
@@ -106,6 +107,32 @@ handler puts them back in your spot in case anything moved them.
 - **Open all mail:** an "Open all" button on the mailbox that takes every item and all the gold,
   skipping COD and GM mail. Stops when your bags are full. If the mailbox already has Blizzard's own
   Open All button, TitanTools leaves it to that one.
+
+## TitanQuests
+
+Replaces Blizzard's quest tracker (the list on the right of the screen) with a slimmer one and hides
+Blizzard's. The quest log itself (on the map) is still Blizzard's.
+
+- **Minimize:** the `-` button on the title bar folds the tracker down to just its title bar, which
+  still shows `12/25` quests and how many are ready to turn in. Click `+` to bring it back. It works in
+  combat. For a key, go to Options > Keybindings > AddOns > TitanQuests. `/tquests min` does the same.
+- **Dungeons and raids:** it minimizes itself when you zone in and comes back when you leave (if it
+  was open when you went in). Untick it in `/tquests`. There's also "Minimize during combat".
+- **Folding:** click a quest to fold its objectives away, click a zone name to fold the whole zone.
+  The `+`/`-` next to each shows which are folded. Right-click a quest for: open in quest log, stop
+  tracking, share with party, fold/unfold all, abandon. Shift-click a quest to stop tracking it.
+- **Moving and sizing:** drag the title bar to move it. Drag the corner grip (bottom-right) to make it
+  wider or narrower. Scale, text size, max height and background darkness are sliders in `/tquests`.
+  Tick "Lock position and width" when you're happy. `/tquests reset` puts it back by the minimap.
+- **What it shows:** by default your tracked quests. Tick "Every quest in the log" to see all of them.
+  Finished objectives are hidden (untick to see them greyed out with a tick); finished quests turn
+  green with "Ready to turn in". Quest levels are coloured by difficulty. Turn off zone grouping or
+  levels if you want it even barer.
+- **Quest items:** quests that give you an item to use show a button to the left of the quest. Click it
+  to use the item. These are secure buttons, so they're placed out of combat: if the list changes
+  mid-fight they catch up when combat ends, and you can't scroll the list in combat while one is showing.
+- **Long lists:** past the max height it shows "N more"; mouse wheel over the list scrolls.
+- **Blizzard's tracker back:** untick "Hide Blizzard's quest tracker" (or disable TitanQuests).
 
 ## Notes
 
