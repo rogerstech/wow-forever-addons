@@ -1,5 +1,5 @@
 -- TitanTools: big icons for missing self-buffs, and a warning when you're
--- fighting in a group out of Bear Form.
+-- in a group without your tank form/buff (Bear Form, Righteous Fury).
 local ADDON, TT = ...
 
 -- Each entry: the spell to look for (any rank; the name covers all ranks) and other
@@ -10,10 +10,20 @@ local BUFFS = {
 		{ spell = 467 },                    -- Thorns
 		{ spell = 16864 },                  -- Omen of Clarity (talent)
 	},
+	PALADIN = {
+		-- Any of your blessings counts. Salvation doesn't: a tank never wants it.
+		{ spell = 19740, label = "Blessing", also = {
+			19742, 20217, 20911, 19977,          -- Wisdom, Kings, Sanctuary, Light
+			25782, 25894, 25898, 25899, 25890,   -- the Greater versions
+		} },
+	},
 }
 
 local BEAR_SPELLS = { [5487] = true, [9634] = true } -- Bear Form, Dire Bear Form
 local BEAR_FORM_ID = 5
+local RIGHTEOUS_FURY = 25780
+local SALVATION = { 1038, 25895 } -- Blessing / Greater Blessing of Salvation
+local DEVOTION_AURA = 465
 local LOW_TIME = 60
 local ICON_SIZE, GAP = 44, 8
 
@@ -41,6 +51,37 @@ local function BuffTimeLeft(name)
 	local exp = aura.expirationTime
 	if not exp or exp == 0 then return math.huge end
 	return exp - GetTime()
+end
+
+-- BuffTimeLeft, but returns false instead of erroring when the client hides
+-- your auras from addons (it can in combat).
+local function SafeTimeLeft(name)
+	local ok, left = pcall(BuffTimeLeft, name)
+	if not ok or (issecretvalue and issecretvalue(left)) then return false end
+	return left
+end
+
+-- Seconds of Righteous Fury left, or nil if it's off. If the client hides it in
+-- combat, trust what we saw before the pull.
+local rfUntil
+local function RighteousFuryLeft()
+	local name = SpellName(RIGHTEOUS_FURY)
+	if not name then return nil end
+	local left = SafeTimeLeft(name)
+	if left == false then
+		local now = GetTime()
+		return rfUntil and rfUntil > now and rfUntil - now or nil
+	end
+	rfUntil = left and GetTime() + left or nil
+	return left
+end
+
+local function HasAnyBuff(ids)
+	for _, id in ipairs(ids) do
+		local name = SpellName(id)
+		if name and SafeTimeLeft(name) then return true end
+	end
+	return false
 end
 
 local function InBearForm()
@@ -102,15 +143,33 @@ local function Collect()
 	if not cfg.enabled then return list end
 	if UnitIsDeadOrGhost("player") or UnitOnTaxi("player") or (UnitInVehicle and UnitInVehicle("player")) then return list end
 	local inCombat = InCombatLockdown()
+	local _, class = UnitClass("player")
 
-	if cfg.bearWarning and inCombat and IsInGroup() and Known(5487) and not InBearForm() then
-		table.insert(list, { icon = SpellIcon(5487), text = "NOT IN BEAR", r = 1, g = 0.5, b = 0 })
+	-- Tank form/buff, in a group only. Bear Form is checked in combat (you pull in
+	-- caster form). Righteous Fury is checked before the pull too, so you can fix it.
+	if cfg.bearWarning and IsInGroup() then
+		if class == "DRUID" and inCombat and Known(5487) and not InBearForm() then
+			table.insert(list, { icon = SpellIcon(5487), text = "NOT IN BEAR", r = 1, g = 0.5, b = 0 })
+		elseif class == "PALADIN" and Known(RIGHTEOUS_FURY) then
+			local left = RighteousFuryLeft()
+			if not left then
+				table.insert(list, { icon = SpellIcon(RIGHTEOUS_FURY), text = "NO FURY", r = 1, g = 0.5, b = 0 })
+			elseif not inCombat and cfg.lowTime and left < LOW_TIME then
+				table.insert(list, { icon = SpellIcon(RIGHTEOUS_FURY), text = ("Fury %ds"):format(left), r = 1, g = 0.85, b = 0 })
+			end
+			if not inCombat and HasAnyBuff(SALVATION) then
+				table.insert(list, { icon = SpellIcon(SALVATION[1]), text = "REMOVE SALV", r = 1, g = 0.5, b = 0 })
+			end
+		end
 	end
 
 	-- Buffs are only checked out of combat: you can't rebuff mid-pull anyway, and the
 	-- client hides some aura details from addons during combat.
 	if not inCombat then
-		local _, class = UnitClass("player")
+		-- Paladin auras live on the stance bar: none active = no aura.
+		if class == "PALADIN" and (GetNumShapeshiftForms() or 0) > 0 and (GetShapeshiftForm() or 0) == 0 then
+			table.insert(list, { icon = SpellIcon(DEVOTION_AURA), text = "No aura" })
+		end
 		for _, buff in ipairs(BUFFS[class] or {}) do
 			if Known(buff.spell) then
 				local name = SpellName(buff.spell)
@@ -120,10 +179,11 @@ local function Collect()
 					local otherLeft = otherName and BuffTimeLeft(otherName)
 					if otherLeft and (not left or otherLeft > left) then left = otherLeft end
 				end
+				local label = buff.label or name
 				if not left then
-					table.insert(list, { icon = SpellIcon(buff.spell), text = name })
+					table.insert(list, { icon = SpellIcon(buff.spell), text = label })
 				elseif cfg.lowTime and left < LOW_TIME then
-					table.insert(list, { icon = SpellIcon(buff.spell), text = ("%s %ds"):format(name, left), r = 1, g = 0.85, b = 0 })
+					table.insert(list, { icon = SpellIcon(buff.spell), text = ("%s %ds"):format(label, left), r = 1, g = 0.85, b = 0 })
 				end
 			end
 		end
@@ -135,7 +195,9 @@ end
 local function Placeholder()
 	return {
 		{ icon = SpellIcon(1126) or 136078, text = "Missing buff" },
-		{ icon = SpellIcon(5487) or 132276, text = "NOT IN BEAR", r = 1, g = 0.5, b = 0 },
+		select(2, UnitClass("player")) == "PALADIN"
+			and { icon = SpellIcon(RIGHTEOUS_FURY) or 135962, text = "NO FURY", r = 1, g = 0.5, b = 0 }
+			or { icon = SpellIcon(5487) or 132276, text = "NOT IN BEAR", r = 1, g = 0.5, b = 0 },
 	}
 end
 

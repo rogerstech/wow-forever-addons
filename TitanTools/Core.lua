@@ -244,7 +244,7 @@ local function Build()
 		function() return r.enabled end, function(on) r.enabled = on; TT:UpdateReminders() end)
 	MakeCheck(c, "Also warn when a buff has under 1 min left", -54,
 		function() return r.lowTime end, function(on) r.lowTime = on; TT:UpdateReminders() end)
-	MakeCheck(c, "Warn in group combat when not in Bear Form", -78,
+	MakeCheck(c, "Warn in a group when not in tank form (Bear, Righteous Fury)", -78,
 		function() return r.bearWarning end, function(on) r.bearWarning = on; TT:UpdateReminders() end)
 
 	Heading(c, "Target of target", -112)

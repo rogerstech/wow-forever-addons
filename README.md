@@ -6,7 +6,7 @@ They were written against Blizzard's own Forever-branch UI source.
 | Addon | What it does | Command |
 |-------|--------------|---------|
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. | `/tb` |
-| **TitanTools** | Buff reminder (Mark of the Wild, Thorns, Omen of Clarity) and a "not in Bear Form" warning, a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
+| **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. | `/tf` |
 | **TitanQuests** | A cleaner quest tracker that replaces Blizzard's. Quests grouped by zone, fold quests or zones away, quest item buttons, and one button (or key) to minimize it. Minimizes itself in dungeons and raids. | `/tquests` |
 | **TitanMap** | A see-through map of your zone that sits on your screen while you play: your arrow, quest markers and shaded quest areas. Clicks go straight through it. Toggle with a key. | `/tmap` |
@@ -96,9 +96,14 @@ handler puts them back in your spot in case anything moved them.
   the target-of-target frame: drag to move, mouse wheel to resize, right-click to reset.
 - **Buff reminder:** large pulsing icons when Mark of the Wild (Gift of the Wild counts), Thorns or
   Omen of Clarity is missing, or yellow with a timer when one has under a minute left. Out of combat
-  only. Only spells you know are checked. Druid only for now.
-- **Bear Form warning:** an orange "NOT IN BEAR" icon when you're in combat, in a group, and not in
-  Bear or Dire Bear Form. Untick it if you're healing or in Cat Form on purpose.
+  only. Only spells you know are checked. Paladins get a "Blessing" icon when none of their blessings
+  is up (Salvation doesn't count) and "No aura" when no aura is active.
+- **Tank form warning** (one setting, per class, in a group only):
+  - Druid: an orange "NOT IN BEAR" icon in combat when you're not in Bear or Dire Bear Form.
+  - Paladin: an orange "NO FURY" icon when Righteous Fury is off, before the pull as well as during
+    it, yellow with a timer under a minute, and "REMOVE SALV" if Salvation is on you (it cuts your
+    threat). If the game hides your buffs in combat, it uses what it saw just before the pull.
+  - Untick it if you're healing or playing DPS on purpose.
 - **Target of target:** shows who your target is hitting. On a hostile target the bar is green
   while it's on you and red with a "!" when it's on someone else. Click it to target them.
 - **Nameplate aggro colours:** enemy nameplates turn green while that mob is attacking you and red
