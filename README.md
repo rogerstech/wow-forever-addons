@@ -5,7 +5,7 @@ They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
 |-------|--------------|---------|
-| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. | `/tb` |
+| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. Info panel along the top or bottom with coordinates, zone, clock, FPS/latency, gold, durability, bag space and XP, holding the bags and menu buttons. | `/tb` |
 | **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. Viewport (shrink the game world to leave black space for your UI) and an optional square, resizable minimap. | `/tf` |
 | **TitanChat** | A cleaner, flatter chat window: dark panel, flat tabs with a class-coloured underline, Arial Narrow font, tidy input box, side buttons hidden. Restyles Blizzard's chat, so tabs, whispers and links all work as normal. | `/tchat` |
@@ -91,6 +91,21 @@ Once you change a frame here, TitanFrames keeps it there even if Edit Mode or a 
 moves it. Use Reset to let Edit Mode control it again. Party and raid frames are protected, so
 changes you make to them during combat apply when combat ends. As a fight starts, a secure
 handler puts them back in your spot in case anything moved them.
+
+### Info panel (`/tb panel`)
+
+A full-width strip along the top or bottom of the screen. It holds the bag bar and menu buttons
+(sized to fit, on the right) and a row of readouts on the left, each of which you can turn on or off:
+coordinates (x, y, and z when the game gives it), zone and subzone, clock, FPS and latency, gold,
+your lowest gear durability, free bag slots, and XP with rested XP (hidden at max level).
+It can also dock your buffs and debuffs against its edge.
+
+- `/tb panel` opens its settings: on/off, top or bottom, height, background, buff docking and the readouts.
+- `/tb panel top`, `/tb panel bottom`, `/tb panel on`, `/tb panel off` for quick changes.
+- Turning it off: `/reload` puts the bags, menu buttons and buffs back in their usual spots.
+- Dragging the buffs in Edit Mode undocks them from the panel. The bags and menu buttons stay on the
+  panel while it's on.
+- To keep the game world from drawing under the panel, set a TitanFrames viewport edge (`/tf`).
 
 ## TitanTools
 

@@ -34,17 +34,22 @@ function TB:ApplyExtra(info)
 	local f = _G[info.name]
 	if not f then return end
 	local cfg = self:ExtraCfg(info.key)
-	if not cfg.scale and not cfg.pos then return end
+	local owned = self.PanelOwns and self:PanelOwns(info) -- the TitanBars panel holds it
+	if not owned and not cfg.scale and not cfg.pos then return end
 	if f:IsProtected() and InCombatLockdown() then
 		self:RunOutOfCombat("extra" .. info.key, function() TB:ApplyExtra(info) end, true)
 		return
 	end
 	applying[f] = true
-	if cfg.scale then f:SetScale(cfg.scale) end
-	if cfg.pos then
-		local rel = RelScale(f)
-		f:ClearAllPoints()
-		f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", cfg.pos.x / rel, cfg.pos.y / rel)
+	if owned then
+		self:PanelPlace(info, f)
+	else
+		if cfg.scale then f:SetScale(cfg.scale) end
+		if cfg.pos then
+			local rel = RelScale(f)
+			f:ClearAllPoints()
+			f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", cfg.pos.x / rel, cfg.pos.y / rel)
+		end
 	end
 	applying[f] = nil
 	if info.mover and info.mover:IsShown() then self:PlaceExtraMover(info) end
@@ -105,6 +110,11 @@ function TB:SetupExtras()
 			-- You dragged it yourself in Edit Mode: that's the new spot, not something to undo.
 			if type(f.OnDragStop) == "function" then
 				hooksecurefunc(f, "OnDragStop", function()
+					if TB.PanelOwns and TB:PanelOwns(info) then
+						TB:Print(info.label .. " live on the TitanBars panel while it's on (/tb panel to change that).")
+						TB:ApplyExtra(info)
+						return
+					end
 					local cfg = TB:ExtraCfg(info.key)
 					if not cfg.pos and not cfg.scale then return end
 					local pos = CurrentTopLeft(f)
@@ -202,7 +212,7 @@ end
 function TB:SetExtrasUnlocked(on)
 	for _, info in ipairs(self.EXTRAS) do
 		local m = info.mover or CreateExtraMover(info)
-		if on then
+		if on and not (self.PanelOwns and self:PanelOwns(info)) then
 			self:PlaceExtraMover(info)
 			m:Show()
 		else

@@ -160,6 +160,7 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		TB:CreateBars()
 		TB:RefreshAll()
 		TB:SetupExtras()
+		TB:SetupPanel()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		TB:ImportBlizzardKeys()
 		TB:ApplyBindings()
@@ -189,6 +190,7 @@ local HELP = {
 	"/tb  - open the settings window",
 	"/tb unlock  - drag bars, bags and menu buttons to move them; mouse wheel to resize",
 	"/tb lock  - lock bars in place",
+	"/tb panel  - the info panel (coordinates, bags, menu buttons); /tb panel top | bottom | on | off",
 	"/tb bind  - keybind mode: hover a button and press a key (Esc clears)",
 	"/tb importkeys  - re-copy your Blizzard action bar keybinds onto the bars",
 	"/tb rankup  - put the highest rank you know of every spell on your bars (downranks too)",
@@ -213,6 +215,8 @@ SlashCmdList.TITANBARS = function(msg)
 		TB:SetUnlocked(true)
 	elseif cmd == "lock" then
 		TB:SetUnlocked(false)
+	elseif cmd == "panel" then
+		TB:PanelCommand(rest)
 	elseif cmd == "bind" or cmd == "kb" then
 		TB:SetBindMode(not TB.bindMode)
 	elseif cmd == "importkeys" then
