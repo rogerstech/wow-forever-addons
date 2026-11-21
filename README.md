@@ -1,6 +1,6 @@
 # WoW Forever Addons
 
-Five addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Six addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
@@ -9,6 +9,7 @@ They were written against Blizzard's own Forever-branch UI source.
 | **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. | `/tf` |
 | **TitanQuests** | A cleaner quest tracker that replaces Blizzard's. Quests grouped by zone, fold quests or zones away, quest item buttons, and one button (or key) to minimize it. Minimizes itself in dungeons and raids. | `/tquests` |
+| **TitanMeter** | Damage meter (damage, DPS, healing, HPS, damage taken, absorbs, interrupts, dispels, deaths; this fight or overall, with a spell breakdown on hover) and a threat meter for your target, for you and your group. Uses the game's own combat numbers. | `/tmeter` |
 | **TitanMap** | A see-through map of your zone that sits on your screen while you play: your arrow, quest markers and shaded quest areas. Clicks go straight through it. Toggle with a key. | `/tmap` |
 
 ## Download
@@ -21,7 +22,7 @@ Each addon works on its own, so install only the ones you want.
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests` and `TitanMap` folders into
+2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap` and `TitanMeter` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
@@ -163,6 +164,41 @@ and loot under it.
 - **Settings** (`/tmap config`): map opacity and marker opacity (separately), width, only tracked
   quests or all, quest names, quest areas, and hide during combat or in dungeons.
 - In dungeons the game doesn't give addons your position, so there's no arrow there.
+
+## TitanMeter
+
+Two small windows. Forever counts damage, healing and threat itself (it has a built-in meter of
+its own); TitanMeter shows those numbers in a cleaner layout. It turns the game's meter on behind
+the scenes and hides Blizzard's window (`/tmeter blizzard show` brings it back).
+
+**Damage meter**
+- **Left-click the title** for the next mode, **right-click** for the previous: Damage, DPS, Healing,
+  HPS, Damage Taken, Absorbs, Interrupts, Dispels, Deaths, Enemy Damage Taken.
+- **Click Current / Overall** (top right) to switch between this fight and everything since the last
+  reset. The timer beside it is the fight length.
+- Bars are class-coloured; your name is gold. If you're further down than the window shows, you take
+  the last row, so you always see yourself.
+- **Hover a bar** after combat to see that player's spells (amount and share). During combat the game
+  doesn't let addons look this up.
+- **Shift-click the title** or `/tmeter reset` to clear all fights.
+
+**Threat meter**
+- Shows threat on your target for you, your group (or raid) and your pet. If your target is friendly
+  (healers), it uses your target's target.
+- **100%** = has aggro (red bar). Everyone else shows how close they are to pulling it; **orange at
+  80%** or more. The tank is listed first.
+- Shows in combat only by default; `/tmeter threat always` keeps it up whenever you have a hostile target.
+
+**Commands**
+- `/tmeter unlock` then drag the window titles to move them; `/tmeter lock` when done.
+- `/tmeter rows N`, `/tmeter width N`, `/tmeter scale N` size the damage meter;
+  `/tmeter threatrows N`, `/tmeter threatwidth N`, `/tmeter threatscale N` size the threat window.
+- `/tmeter meter off`, `/tmeter threat off` hide a window. `/tmeter resetpos` re-centres both.
+
+In combat the game hides exact numbers from addons ("secret values"). They can still be drawn, which is
+what TitanMeter does, but they can't be sorted by an addon. The damage list arrives already sorted by
+the game. The threat list is sorted when the game allows it; if it ever doesn't, it falls back to group
+order (the bars and percentages are still right).
 
 ## Notes
 

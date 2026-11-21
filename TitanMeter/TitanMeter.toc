@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: TitanMeter
+## Notes: Damage meter (damage, DPS, healing, damage taken, interrupts, dispels, deaths) built on the game's own combat data, plus a threat meter for your target.
+## Author: Adam Rogers
+## Version: 1.0.0
+## SavedVariables: TitanMeterDB
+## IconTexture: Interface\Icons\Ability_Warrior_BattleShout
+
+Core.lua
+Window.lua
+Meter.lua
+Threat.lua
