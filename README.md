@@ -167,7 +167,7 @@ and loot under it.
 
 **Viewport** (in the `/tf` window): shrink the area the game world is drawn in, leaving black space
 at the top, bottom, left or right for your bars and meters. The world is not stretched. Use the four
-sliders, or type an exact value with `/tf viewport bottom 120` (also `top`, `left`, `right`, 0-600);
+sliders, or type an exact value with `/tf viewport bottom 120` (also `top`, `left`, `right`, 0-3000);
 `/tf viewport reset` gives the whole screen back. Changes made in combat apply when combat ends.
 
 ## TitanMeter

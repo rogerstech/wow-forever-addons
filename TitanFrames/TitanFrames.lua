@@ -480,12 +480,12 @@ SlashCmdList.TITANFRAMES = function(msg)
 	elseif cmd:match("^viewport ") then
 		local side, n = cmd:match("^viewport (%a+) (%d+)$")
 		if side and TF:ViewportCfg()[side] ~= nil then
-			TF:ViewportCfg()[side] = math.min(tonumber(n), 600)
+			TF:ViewportCfg()[side] = math.min(tonumber(n), 3000)
 			TF:ApplyViewport()
 			TF:RefreshWindow()
 			TF:Print(("viewport %s edge = %d"):format(side, TF:ViewportCfg()[side]))
 		else
-			TF:Print("/tf viewport top|bottom|left|right N   (0-600)   /tf viewport reset")
+			TF:Print("/tf viewport top|bottom|left|right N   (0-3000)   /tf viewport reset")
 		end
 	elseif cmd == "reset" then
 		for _, info in ipairs(TF.FRAMES) do TF:ResetFrame(info) end

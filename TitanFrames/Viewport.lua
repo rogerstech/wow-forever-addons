@@ -10,7 +10,7 @@ local SIDES = {
 	{ key = "left",   label = "Left" },
 	{ key = "right",  label = "Right" },
 }
-local MAX = 600       -- slider limit, in screen units
+local MAX = 3000      -- slider limit, in screen units (big enough to blank a whole second monitor)
 local MIN_KEEP = 0.25 -- the world always keeps at least a quarter of the screen each way
 
 local pending = false

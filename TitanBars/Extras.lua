@@ -89,7 +89,14 @@ function TB:SetupExtras()
 		if f and not info.hooked then
 			info.hooked = true
 			local function Reapply()
-				if applying[f] or EditModeActive() then return end
+				if applying[f] then return end
+				if EditModeActive() then
+					-- Edit Mode re-anchors everything when a layout is saved or switched.
+					-- Frames TitanBars owns ignore Edit Mode, so put them back once
+					-- Blizzard's own layout pass has finished (next frame).
+					C_Timer.After(0, function() TB:ApplyExtra(info) end)
+					return
+				end
 				TB:ApplyExtra(info)
 			end
 			hooksecurefunc(f, "SetPoint", Reapply)
@@ -98,8 +105,19 @@ function TB:SetupExtras()
 	end
 	if self.db.hideExtraArt then self:HideExtraArt() end
 	self:ApplyExtras()
-	if EventRegistry then
-		EventRegistry:RegisterCallback("EditMode.Exit", function() TB:ApplyExtras() end, TB)
+	if EventRegistry and not self.extrasEditHooked then
+		self.extrasEditHooked = true
+		-- Catch the save/exit layout passes now and again once they settle.
+		local function Settle()
+			TB:ApplyExtras()
+			C_Timer.After(0, function() TB:ApplyExtras() end)
+			C_Timer.After(0.5, function() TB:ApplyExtras() end)
+		end
+		EventRegistry:RegisterCallback("EditMode.Exit", Settle, TB)
+		EventRegistry:RegisterCallback("EditMode.SavedLayouts", Settle, TB)
+		local ev = CreateFrame("Frame")
+		ev:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
+		ev:SetScript("OnEvent", Settle)
 	end
 end
 
