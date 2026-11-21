@@ -340,7 +340,7 @@ local function MakeScrollWindow(name, width, contentHeight)
 end
 
 local function BuildWindow()
-	win = MakeScrollWindow("TitanFramesConfig", 346, 410)
+	win = MakeScrollWindow("TitanFramesConfig", 346, 680)
 	local c = win.content
 
 	local title = win:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -400,6 +400,8 @@ local function BuildWindow()
 	help:SetPoint("TOP", 0, -360)
 	help:SetWidth(280)
 	help:SetText("Unlock to drag frames around. Frames you change here ignore Edit Mode until you Reset them.")
+
+	TF:BuildViewportControls(c, -404)
 end
 
 function TF:RefreshWindow()
@@ -413,6 +415,7 @@ function TF:RefreshWindow()
 	end
 	win.coordsCheck:SetChecked(self:CoordsEnabled())
 	win.lockBtn:SetText(self.unlocked and "Lock frames" or "Unlock frames")
+	self:RefreshViewportControls()
 	refreshing = false
 end
 
@@ -472,9 +475,21 @@ SlashCmdList.TITANFRAMES = function(msg)
 		TF:SetUnlocked(true)
 	elseif cmd == "lock" then
 		TF:SetUnlocked(false)
+	elseif cmd == "viewport reset" then
+		TF:ResetViewport()
+	elseif cmd:match("^viewport ") then
+		local side, n = cmd:match("^viewport (%a+) (%d+)$")
+		if side and TF:ViewportCfg()[side] ~= nil then
+			TF:ViewportCfg()[side] = math.min(tonumber(n), 600)
+			TF:ApplyViewport()
+			TF:RefreshWindow()
+			TF:Print(("viewport %s edge = %d"):format(side, TF:ViewportCfg()[side]))
+		else
+			TF:Print("/tf viewport top|bottom|left|right N   (0-600)   /tf viewport reset")
+		end
 	elseif cmd == "reset" then
 		for _, info in ipairs(TF.FRAMES) do TF:ResetFrame(info) end
 	else
-		TF:Print("/tf - settings   /tf unlock   /tf lock   /tf reset")
+		TF:Print("/tf - settings   /tf unlock   /tf lock   /tf reset   /tf viewport bottom N   /tf viewport reset")
 	end
 end

@@ -165,6 +165,11 @@ and loot under it.
   quests or all, quest names, quest areas, and hide during combat or in dungeons.
 - In dungeons the game doesn't give addons your position, so there's no arrow there.
 
+**Viewport** (in the `/tf` window): shrink the area the game world is drawn in, leaving black space
+at the top, bottom, left or right for your bars and meters. The world is not stretched. Use the four
+sliders, or type an exact value with `/tf viewport bottom 120` (also `top`, `left`, `right`, 0-600);
+`/tf viewport reset` gives the whole screen back. Changes made in combat apply when combat ends.
+
 ## TitanMeter
 
 Two small windows. Forever counts damage, healing and threat itself (it has a built-in meter of
