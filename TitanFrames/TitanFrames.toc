@@ -1,11 +1,12 @@
 ## Interface: 16001
 ## Title: TitanFrames
-## Notes: Move and resize the minimap, party frames, raid frames and XP bar. Map coordinates on the minimap. Viewport: shrink the game world to leave room at the screen edges. Optional square, resizable minimap.
+## Notes: Move and resize the minimap, party frames, raid frames and XP bar. Map coordinates on the minimap. Viewport: shrink the game world to leave room at the screen edges. Optional square, resizable minimap. Hide the XP and reputation bars.
 ## Author: Adam Rogers
-## Version: 1.4.0
+## Version: 1.5.0
 ## SavedVariables: TitanFramesDB
 ## IconTexture: Interface\Icons\INV_Misc_Map_01
 
 TitanFrames.lua
 Viewport.lua
 SquareMinimap.lua
+HideBars.lua

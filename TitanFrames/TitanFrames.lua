@@ -341,7 +341,7 @@ local function MakeScrollWindow(name, width, contentHeight)
 end
 
 local function BuildWindow()
-	win = MakeScrollWindow("TitanFramesConfig", 346, 820)
+	win = MakeScrollWindow("TitanFramesConfig", 346, 900)
 	local c = win.content
 
 	local title = win:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -404,6 +404,7 @@ local function BuildWindow()
 
 	TF:BuildViewportControls(c, -404)
 	TF:BuildSquareControls(c, -690)
+	TF:BuildHideControls(c, -820)
 end
 
 function TF:RefreshWindow()
@@ -419,6 +420,7 @@ function TF:RefreshWindow()
 	win.lockBtn:SetText(self.unlocked and "Lock frames" or "Unlock frames")
 	self:RefreshViewportControls()
 	self:RefreshSquareControls()
+	self:RefreshHideControls()
 	refreshing = false
 end
 

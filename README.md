@@ -7,7 +7,7 @@ They were written against Blizzard's own Forever-branch UI source.
 |-------|--------------|---------|
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. Info panel along the top or bottom with coordinates, zone, clock, FPS/latency, gold, durability, bag space and XP, holding the bags and menu buttons. | `/tb` |
 | **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
-| **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. Viewport (shrink the game world to leave black space for your UI) and an optional square, resizable minimap. | `/tf` |
+| **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. Viewport (shrink the game world to leave black space for your UI), an optional square, resizable minimap, and hiding the XP / reputation bars. | `/tf` |
 | **TitanChat** | A cleaner, flatter chat window: dark panel, flat tabs with a class-coloured underline, Arial Narrow font, tidy input box, side buttons hidden. Restyles Blizzard's chat, so tabs, whispers and links all work as normal. | `/tchat` |
 | **TitanQuests** | A cleaner quest tracker that replaces Blizzard's. Quests grouped by zone, fold quests or zones away, quest item buttons, and one button (or key) to minimize it. Minimizes itself in dungeons and raids. | `/tquests` |
 | **TitanMeter** | Damage meter (damage, DPS, healing, HPS, damage taken, absorbs, interrupts, dispels, deaths; this fight or overall, with a spell breakdown on hover) and a threat meter for your target, for you and your group. Uses the game's own combat numbers. | `/tmeter` |
@@ -185,6 +185,10 @@ and loot under it.
 at the top, bottom, left or right for your bars and meters. The world is not stretched. Use the four
 sliders, or type an exact value with `/tf viewport bottom 120` (also `top`, `left`, `right`, 0-3000);
 `/tf viewport reset` gives the whole screen back. Changes made in combat apply when combat ends.
+
+**Hide the XP bar / reputation bar** (in the `/tf` window, under "Status bars"): tick either box to hide
+that bar. Untick to bring it back (`/reload` if it doesn't return to the right spot). The TitanBars info
+panel (`/tb panel`) can show your XP and rested XP instead.
 
 **Square minimap** (in the `/tf` window): tick "Square minimap" for a square map with a thin dark
 border instead of the round frame. Set the size with the slider, or `/tf unlock` and drag the grip in
