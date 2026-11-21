@@ -193,6 +193,8 @@ panel (`/tb panel`) can show your XP and rested XP instead.
 **Square minimap** (in the `/tf` window): tick "Square minimap" for a square map with a thin dark
 border instead of the round frame. Set the size with the slider, or `/tf unlock` and drag the grip in
 the minimap's bottom-right corner. Untick it to get the round minimap back.
+On a square map the day/night dial moves to the top-right corner. While unlocked (`/tf unlock`) you
+can drag the dial anywhere (right-click it to put it back); it follows the minimap when it moves or resizes.
 
 ## TitanChat
 

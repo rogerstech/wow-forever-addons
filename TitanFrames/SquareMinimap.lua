@@ -60,6 +60,88 @@ function TF:ApplySquare()
 	end
 	applying = false
 	if grip then grip:SetShown(self.unlocked and cfg.enabled) end
+	self:ApplyDiel()
+end
+
+---------------------------------------------------------------------------
+-- Day/night dial (MinimapCluster.DielFrame, Forever only). Blizzard pins it at a fixed
+-- offset that suits the round frame; on a square map that's inside the map. You can
+-- drag it while /tf is unlocked (right-click puts it back). Saved as an offset from the
+-- minimap's centre in screen units, so it follows the minimap when it moves or resizes.
+---------------------------------------------------------------------------
+local BLIZZ_DIEL_X, BLIZZ_DIEL_Y = 55, 86 -- Blizzard's own offset (Diel.lua)
+local dielApplying = false
+
+local function Diel()
+	return MinimapCluster and MinimapCluster.DielFrame
+end
+
+function TF:ApplyDiel()
+	local d = Diel()
+	if not d then return end
+	local cfg = self:Cfg("diel")
+	dielApplying = true
+	if cfg.x and cfg.y then
+		local e = d:GetEffectiveScale()
+		d:ClearAllPoints()
+		d:SetPoint("CENTER", Minimap, "CENTER", cfg.x / e, cfg.y / e)
+	elseif self:SquareCfg().enabled then
+		-- Square map, never moved: sit on the top-right corner, half outside the map.
+		d:ClearAllPoints()
+		d:SetPoint("CENTER", Minimap, "TOPRIGHT", 0, 0)
+	elseif self.dielTouched then
+		-- Back to Blizzard's spot (same maths as Diel.lua).
+		local scale = MinimapCluster.MinimapContainer:GetScale()
+		scale = (scale and scale > 0) and scale or 1
+		d:ClearAllPoints()
+		d:SetPoint("CENTER", MinimapCluster.MinimapContainer, "CENTER", BLIZZ_DIEL_X * scale, BLIZZ_DIEL_Y * scale)
+	end
+	self.dielTouched = (cfg.x ~= nil) or self:SquareCfg().enabled
+	dielApplying = false
+end
+
+function TF:SetDielUnlocked(on)
+	local d = Diel()
+	if not d then return end
+	d:SetMovable(true)
+	d:EnableMouse(on)
+	if on then
+		d.tfStrata = d.tfStrata or d:GetFrameStrata()
+		d:SetFrameStrata("FULLSCREEN") -- above the blue drag box over the minimap
+	elseif d.tfStrata then
+		d:SetFrameStrata(d.tfStrata)
+		d:SetFrameLevel(5)
+	end
+	if d.tfHooked then return end
+	d.tfHooked = true
+	d:RegisterForDrag("LeftButton")
+	d:SetScript("OnDragStart", function(self) if TF.unlocked then self:StartMoving() end end)
+	d:SetScript("OnDragStop", function(self)
+		self:StopMovingOrSizing()
+		local dx, dy = self:GetCenter()
+		local mx, my = Minimap:GetCenter()
+		if dx and mx then
+			local de, me = self:GetEffectiveScale(), Minimap:GetEffectiveScale()
+			local cfg = TF:Cfg("diel")
+			cfg.x, cfg.y = dx * de - mx * me, dy * de - my * me
+		end
+		TF:ApplyDiel()
+	end)
+	d:SetScript("OnMouseUp", function(self, button)
+		if button == "RightButton" and TF.unlocked then
+			local cfg = TF:Cfg("diel")
+			cfg.x, cfg.y = nil, nil
+			TF:ApplyDiel()
+		end
+	end)
+	d:HookScript("OnEnter", function(self)
+		if not TF.unlocked then return end
+		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+		GameTooltip:SetText("Day/night dial")
+		GameTooltip:AddLine("Drag to move, right-click to put it back", 1, 1, 1)
+		GameTooltip:Show()
+	end)
+	d:HookScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
 -- Minimap-button addons ask this to know how to lay their icons around the edge.
@@ -189,6 +271,16 @@ ev:SetScript("OnEvent", function()
 			C_Timer.After(0, function() TF:ApplySquare() end)
 		end
 	end)
-	hooksecurefunc(TF, "SetUnlocked", function() TF:ApplySquare() end)
+	hooksecurefunc(TF, "SetUnlocked", function(_, on)
+		TF:ApplySquare()
+		if not (on and InCombatLockdown()) then TF:SetDielUnlocked(TF.unlocked) end
+	end)
+	-- Blizzard re-pins the dial when the minimap's Edit Mode size changes.
+	local d = Diel()
+	if d then
+		hooksecurefunc(d, "SetPoint", function()
+			if not dielApplying then C_Timer.After(0, function() TF:ApplyDiel() end) end
+		end)
+	end
 	TF:ApplySquare()
 end)
