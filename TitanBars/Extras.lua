@@ -89,7 +89,8 @@ function TB:SetupExtras()
 		if f and not info.hooked then
 			info.hooked = true
 			local function Reapply()
-				if applying[f] then return end
+				-- f.isDragging is Blizzard's flag while you drag it in Edit Mode.
+				if applying[f] or f.isDragging then return end
 				if EditModeActive() then
 					-- Edit Mode re-anchors everything when a layout is saved or switched.
 					-- Frames TitanBars owns ignore Edit Mode, so put them back once
@@ -101,6 +102,16 @@ function TB:SetupExtras()
 			end
 			hooksecurefunc(f, "SetPoint", Reapply)
 			hooksecurefunc(f, "SetScale", Reapply)
+			-- You dragged it yourself in Edit Mode: that's the new spot, not something to undo.
+			if type(f.OnDragStop) == "function" then
+				hooksecurefunc(f, "OnDragStop", function()
+					local cfg = TB:ExtraCfg(info.key)
+					if not cfg.pos and not cfg.scale then return end
+					local pos = CurrentTopLeft(f)
+					if pos then cfg.pos = pos end
+					TB:ApplyExtra(info)
+				end)
+			end
 		end
 	end
 	if self.db.hideExtraArt then self:HideExtraArt() end
