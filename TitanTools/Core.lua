@@ -352,9 +352,12 @@ SlashCmdList.TITANTOOLS = function(msg)
 		TT:SetUnlocked(false)
 	elseif cmd == "" or cmd == "config" then
 		TT:ToggleConfig()
+	elseif cmd == "fury" then
+		TT:FuryReport()
 	else
 		TT:Print("/ttools  - settings window")
 		TT:Print("/ttools unlock  - move and resize the reminder and target-of-target frames")
 		TT:Print("/ttools lock  - lock them")
+		TT:Print("/ttools fury  - show what the Righteous Fury check sees")
 	end
 end

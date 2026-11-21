@@ -44,30 +44,77 @@ local function Known(id)
 	return IsPlayerSpell and IsPlayerSpell(id) or false
 end
 
--- Returns the buff's seconds left (math.huge if it doesn't run out), or nil if missing.
-local function BuffTimeLeft(name)
-	local aura = C_UnitAuras.GetAuraDataBySpellName("player", name, "HELPFUL")
-	if not aura then return nil end
-	local exp = aura.expirationTime
-	if not exp or exp == 0 then return math.huge end
-	return exp - GetTime()
+local function Secret(v)
+	return issecretvalue and issecretvalue(v) or false
 end
 
--- BuffTimeLeft, but returns false instead of erroring when the client hides
--- your auras from addons (it can in combat).
-local function SafeTimeLeft(name)
-	local ok, left = pcall(BuffTimeLeft, name)
-	if not ok or (issecretvalue and issecretvalue(left)) then return false end
+-- Finds one of your buffs three ways (by spell ID, by name, and by scanning your
+-- buffs), because a lookup can miss or be hidden on this client. Returns the aura,
+-- nil if it's not there, or false if the client hid your buffs (it can in combat).
+local function FindBuff(ids, name)
+	local hidden = false
+	local function try(fn, ...)
+		local ok, aura = pcall(fn, ...)
+		if not ok or Secret(aura) then hidden = true return nil end
+		return aura
+	end
+	if C_UnitAuras.GetPlayerAuraBySpellID then
+		for id in pairs(ids) do
+			local aura = try(C_UnitAuras.GetPlayerAuraBySpellID, id)
+			if aura then return aura end
+		end
+	end
+	if name and C_UnitAuras.GetAuraDataBySpellName then
+		local aura = try(C_UnitAuras.GetAuraDataBySpellName, "player", name, "HELPFUL")
+		if aura then return aura end
+	end
+	if C_UnitAuras.GetAuraDataByIndex then
+		for i = 1, 40 do
+			local aura = try(C_UnitAuras.GetAuraDataByIndex, "player", i, "HELPFUL")
+			if not aura then break end
+			local ok, match = pcall(function() return ids[aura.spellId] or (name ~= nil and aura.name == name) end)
+			if not ok or Secret(match) then hidden = true
+			elseif match then return aura end
+		end
+	end
+	if hidden then return false end
+	return nil
+end
+
+-- Seconds left on a found aura. math.huge if it doesn't run out, or if the time
+-- can't be read (the buff is still on, that's what matters).
+local function AuraTimeLeft(aura)
+	local ok, left = pcall(function()
+		local exp = aura.expirationTime
+		if not exp or exp == 0 then return math.huge end
+		return exp - GetTime()
+	end)
+	if not ok or Secret(left) then return math.huge end
 	return left
+end
+
+local function IdSet(...)
+	local t = {}
+	for _, id in ipairs({ ... }) do t[id] = true end
+	return t
+end
+
+-- Returns the buff's seconds left, nil if missing, or false if the client hid it.
+local function SafeTimeLeft(id, name)
+	local aura = FindBuff(IdSet(id), name or SpellName(id))
+	if not aura then return aura end
+	return AuraTimeLeft(aura)
+end
+
+local function BuffTimeLeft(id)
+	return SafeTimeLeft(id) or nil
 end
 
 -- Seconds of Righteous Fury left, or nil if it's off. If the client hides it in
 -- combat, trust what we saw before the pull.
 local rfUntil
 local function RighteousFuryLeft()
-	local name = SpellName(RIGHTEOUS_FURY)
-	if not name then return nil end
-	local left = SafeTimeLeft(name)
+	local left = SafeTimeLeft(RIGHTEOUS_FURY)
 	if left == false then
 		local now = GetTime()
 		return rfUntil and rfUntil > now and rfUntil - now or nil
@@ -78,8 +125,7 @@ end
 
 local function HasAnyBuff(ids)
 	for _, id in ipairs(ids) do
-		local name = SpellName(id)
-		if name and SafeTimeLeft(name) then return true end
+		if SafeTimeLeft(id) then return true end
 	end
 	return false
 end
@@ -173,10 +219,9 @@ local function Collect()
 		for _, buff in ipairs(BUFFS[class] or {}) do
 			if Known(buff.spell) then
 				local name = SpellName(buff.spell)
-				local left = name and BuffTimeLeft(name)
+				local left = BuffTimeLeft(buff.spell)
 				for _, other in ipairs(buff.also or {}) do
-					local otherName = SpellName(other)
-					local otherLeft = otherName and BuffTimeLeft(otherName)
+					local otherLeft = BuffTimeLeft(other)
 					if otherLeft and (not left or otherLeft > left) then left = otherLeft end
 				end
 				local label = buff.label or name
@@ -199,6 +244,35 @@ local function Placeholder()
 			and { icon = SpellIcon(RIGHTEOUS_FURY) or 135962, text = "NO FURY", r = 1, g = 0.5, b = 0 }
 			or { icon = SpellIcon(5487) or 132276, text = "NOT IN BEAR", r = 1, g = 0.5, b = 0 },
 	}
+end
+
+-- /ttools fury: what each lookup sees, so a wrong "NO FURY" can be pinned down.
+function TT:FuryReport()
+	local function show(v)
+		if v == nil then return "none" end
+		if Secret(v) then return "HIDDEN" end
+		if type(v) == "table" then return ("found (id %s)"):format(tostring(v.spellId)) end
+		return tostring(v)
+	end
+	local name = SpellName(RIGHTEOUS_FURY)
+	local p = function(...) print("|cff33ff99TitanTools fury:|r", ...) end
+	p("known", tostring(Known(RIGHTEOUS_FURY)), "| name", tostring(name), "| in combat", tostring(InCombatLockdown()), "| group", tostring(IsInGroup()))
+	if C_UnitAuras.GetPlayerAuraBySpellID then
+		local ok, a = pcall(C_UnitAuras.GetPlayerAuraBySpellID, RIGHTEOUS_FURY)
+		p("by ID:", ok and show(a) or ("error " .. tostring(a)))
+	end
+	local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, "player", name, "HELPFUL")
+	p("by name:", ok and show(a) or ("error " .. tostring(a)))
+	local seen = {}
+	for i = 1, 40 do
+		local ok2, aura = pcall(C_UnitAuras.GetAuraDataByIndex, "player", i, "HELPFUL")
+		if not ok2 then table.insert(seen, "error") break end
+		if not aura then break end
+		local ok3, txt = pcall(function() return ("%s(%s)"):format(aura.name, aura.spellId) end)
+		table.insert(seen, ok3 and not Secret(txt) and txt or "hidden")
+	end
+	p("your buffs:", #seen > 0 and table.concat(seen, ", ") or "none")
+	p("result:", show(RighteousFuryLeft()))
 end
 
 function TT:UpdateReminders()
