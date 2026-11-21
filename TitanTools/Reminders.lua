@@ -72,6 +72,7 @@ local function FindBuff(ids, name)
 		for i = 1, 40 do
 			local aura = try(C_UnitAuras.GetAuraDataByIndex, "player", i, "HELPFUL")
 			if not aura then break end
+			if Secret(aura.spellId) or Secret(aura.name) then hidden = true end
 			local ok, match = pcall(function() return ids[aura.spellId] or (name ~= nil and aura.name == name) end)
 			if not ok or Secret(match) then hidden = true
 			elseif match then return aura end
@@ -110,17 +111,39 @@ local function BuffTimeLeft(id)
 	return SafeTimeLeft(id) or nil
 end
 
--- Seconds of Righteous Fury left, or nil if it's off. If the client hides it in
--- combat, trust what we saw before the pull.
-local rfUntil
+-- Seconds of Righteous Fury left, or nil if it's off. If the client hides it
+-- (in combat, or always if the game marks the spell secret), trust the last time we
+-- could read it or saw you cast it. Kept as a clock time per character, so it
+-- survives /reload; cleared when the buff is clearly gone or you die.
+local RF_DURATION = 1800
+local function RfKey()
+	return (UnitName("player") or "?") .. "-" .. (GetRealmName and GetRealmName() or "?")
+end
+local function RfStore()
+	TT.db.reminder.rfUntil = TT.db.reminder.rfUntil or {}
+	return TT.db.reminder.rfUntil
+end
+local function SetRfUntil(secondsLeft)
+	RfStore()[RfKey()] = secondsLeft and (time() + math.min(secondsLeft, 10 * 86400)) or nil
+end
+local function SavedRfLeft()
+	local u = RfStore()[RfKey()]
+	local left = u and u - time()
+	return left and left > 0 and left or nil
+end
+
 local function RighteousFuryLeft()
 	local left = SafeTimeLeft(RIGHTEOUS_FURY)
-	if left == false then
-		local now = GetTime()
-		return rfUntil and rfUntil > now and rfUntil - now or nil
-	end
-	rfUntil = left and GetTime() + left or nil
+	if left == false then return SavedRfLeft() end
+	SetRfUntil(left == math.huge and RF_DURATION or left)
 	return left
+end
+
+-- You cast Righteous Fury: count it as on for its full duration, even if its buff
+-- can't be read.
+local function OnSpellCast(spellID)
+	local ok, isRf = pcall(function() return spellID == RIGHTEOUS_FURY end)
+	if ok and isRf == true then SetRfUntil(RF_DURATION) end
 end
 
 local function HasAnyBuff(ids)
@@ -272,6 +295,7 @@ function TT:FuryReport()
 		table.insert(seen, ok3 and not Secret(txt) and txt or "hidden")
 	end
 	p("your buffs:", #seen > 0 and table.concat(seen, ", ") or "none")
+	p("saved timer:", show(SavedRfLeft()))
 	p("result:", show(RighteousFuryLeft()))
 end
 
@@ -297,7 +321,10 @@ function TT:SetupReminders()
 		pcall(events.RegisterEvent, events, e)
 	end
 	events:RegisterUnitEvent("UNIT_AURA", "player")
-	events:SetScript("OnEvent", function(_, event)
+	pcall(events.RegisterUnitEvent, events, "UNIT_SPELLCAST_SUCCEEDED", "player")
+	events:SetScript("OnEvent", function(_, event, _, _, spellID)
+		if event == "UNIT_SPELLCAST_SUCCEEDED" then OnSpellCast(spellID) end
+		if event == "PLAYER_DEAD" then pcall(SetRfUntil, nil) end
 		-- REGEN_DISABLED fires just before combat starts; check again once it has.
 		if event == "PLAYER_REGEN_DISABLED" then
 			C_Timer.After(0, function() TT:UpdateReminders() end)
