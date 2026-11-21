@@ -1,13 +1,14 @@
 # WoW Forever Addons
 
-Six addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Seven addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
 |-------|--------------|---------|
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. | `/tb` |
 | **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
-| **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. | `/tf` |
+| **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. Viewport (shrink the game world to leave black space for your UI) and an optional square, resizable minimap. | `/tf` |
+| **TitanChat** | A cleaner, flatter chat window: dark panel, flat tabs with a class-coloured underline, Arial Narrow font, tidy input box, side buttons hidden. Restyles Blizzard's chat, so tabs, whispers and links all work as normal. | `/tchat` |
 | **TitanQuests** | A cleaner quest tracker that replaces Blizzard's. Quests grouped by zone, fold quests or zones away, quest item buttons, and one button (or key) to minimize it. Minimizes itself in dungeons and raids. | `/tquests` |
 | **TitanMeter** | Damage meter (damage, DPS, healing, HPS, damage taken, absorbs, interrupts, dispels, deaths; this fight or overall, with a spell breakdown on hover) and a threat meter for your target, for you and your group. Uses the game's own combat numbers. | `/tmeter` |
 | **TitanMap** | A see-through map of your zone that sits on your screen while you play: your arrow, quest markers and shaded quest areas. Clicks go straight through it. Toggle with a key. | `/tmap` |
@@ -22,7 +23,7 @@ Each addon works on its own, so install only the ones you want.
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap` and `TitanMeter` folders into
+2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter` and `TitanChat` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
@@ -169,6 +170,20 @@ and loot under it.
 at the top, bottom, left or right for your bars and meters. The world is not stretched. Use the four
 sliders, or type an exact value with `/tf viewport bottom 120` (also `top`, `left`, `right`, 0-3000);
 `/tf viewport reset` gives the whole screen back. Changes made in combat apply when combat ends.
+
+**Square minimap** (in the `/tf` window): tick "Square minimap" for a square map with a thin dark
+border instead of the round frame. Set the size with the slider, or `/tf unlock` and drag the grip in
+the minimap's bottom-right corner. Untick it to get the round minimap back.
+
+## TitanChat
+
+Restyles the game's own chat windows (it doesn't replace them, so everything chat does keeps working):
+dark flat panel, flat tabs with a class-coloured line under the one you're viewing, a flat input box
+that lights up while you type, and the column of buttons beside chat hidden. `/tchat` opens settings:
+background darkness, line spacing, outlined text, font (Arial Narrow, Friz Quadrata or the game's
+default) and whether to hide the side buttons. Font size, colours and channels stay in Blizzard's chat
+settings (right-click a tab). TitanChat never reads or changes message text, so it's unaffected by the
+game hiding chat text from addons in combat.
 
 ## TitanMeter
 

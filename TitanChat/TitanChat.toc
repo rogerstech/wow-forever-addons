@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: TitanChat
+## Notes: A cleaner, flatter look for the chat window: dark panel, flat tabs with a class-coloured underline, modern font, tidy input box, side buttons hidden.
+## Author: Adam Rogers
+## Version: 1.0.0
+## SavedVariables: TitanChatDB
+## IconTexture: Interface\Icons\INV_Letter_15
+
+TitanChat.lua

@@ -1,5 +1,6 @@
 -- TitanFrames: move and resize the minimap, party frames, raid frames and XP bar,
--- and show map coordinates on the minimap.
+-- and show map coordinates on the minimap. Viewport.lua and SquareMinimap.lua add the
+-- game-world viewport and the square minimap.
 -- Once you move or resize a frame here, TitanFrames owns its size and position and
 -- re-applies them whenever Blizzard (Edit Mode, roster changes) puts it back.
 local ADDON, TF = ...
@@ -340,7 +341,7 @@ local function MakeScrollWindow(name, width, contentHeight)
 end
 
 local function BuildWindow()
-	win = MakeScrollWindow("TitanFramesConfig", 346, 680)
+	win = MakeScrollWindow("TitanFramesConfig", 346, 820)
 	local c = win.content
 
 	local title = win:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -402,6 +403,7 @@ local function BuildWindow()
 	help:SetText("Unlock to drag frames around. Frames you change here ignore Edit Mode until you Reset them.")
 
 	TF:BuildViewportControls(c, -404)
+	TF:BuildSquareControls(c, -690)
 end
 
 function TF:RefreshWindow()
@@ -416,6 +418,7 @@ function TF:RefreshWindow()
 	win.coordsCheck:SetChecked(self:CoordsEnabled())
 	win.lockBtn:SetText(self.unlocked and "Lock frames" or "Unlock frames")
 	self:RefreshViewportControls()
+	self:RefreshSquareControls()
 	refreshing = false
 end
 
