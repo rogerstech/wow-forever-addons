@@ -89,7 +89,7 @@ local function Update()
 	local sources = session and session.combatSources or {}
 	local count = #sources
 	if count == 0 then
-		win.empty:SetText(TM.db.locked and "No data yet." or "No data yet. Drag the title to move.")
+		win.empty:SetText(TM.db.locked and "No data yet." or "No data yet. Drag the title to move, the corner to resize.")
 		return HideRows(1)
 	end
 	win.empty:SetText("")
@@ -221,7 +221,7 @@ function TM:SetupMeter()
 		GameTooltip:SetText("TitanMeter")
 		GameTooltip:AddLine("Left-click: next mode, right-click: previous", 1, 1, 1)
 		GameTooltip:AddLine("Shift-click: clear all fights", 1, 1, 1)
-		if not TM.db.locked then GameTooltip:AddLine("Drag to move (/tmeter lock when done)", 0.6, 0.8, 1) end
+		if not TM.db.locked then GameTooltip:AddLine("Drag to move, corner to resize (/tmeter lock when done)", 0.6, 0.8, 1) end
 		GameTooltip:Show()
 	end)
 	win.header:SetScript("OnLeave", RowLeave)

@@ -190,7 +190,8 @@ the scenes and hides Blizzard's window (`/tmeter blizzard show` brings it back).
 - Shows in combat only by default; `/tmeter threat always` keeps it up whenever you have a hostile target.
 
 **Commands**
-- `/tmeter unlock` then drag the window titles to move them; `/tmeter lock` when done.
+- `/tmeter unlock` then drag the window titles to move them, and drag the grip in the bottom-right
+  corner to resize (width follows the mouse, height snaps to whole rows); `/tmeter lock` when done.
 - `/tmeter rows N`, `/tmeter width N`, `/tmeter scale N` size the damage meter;
   `/tmeter threatrows N`, `/tmeter threatwidth N`, `/tmeter threatscale N` size the threat window.
 - `/tmeter meter off`, `/tmeter threat off` hide a window. `/tmeter resetpos` re-centres both.

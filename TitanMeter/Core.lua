@@ -107,7 +107,7 @@ end
 ---------------------------------------------------------------------------
 local function Help()
 	TM:Print("commands:")
-	print("  /tmeter lock | unlock - lock windows, or unlock to drag them by the title")
+	print("  /tmeter lock | unlock - lock windows, or unlock to drag them by the title and resize from the corner")
 	print("  /tmeter reset - clear all fights")
 	print("  /tmeter meter on|off, /tmeter threat on|off - show or hide each window")
 	print("  /tmeter threat always|combat - threat window always, or only in combat")
@@ -132,7 +132,7 @@ SlashCmdList.TITANMETER = function(msg)
 	local db = TM.db
 	if cmd == "lock" or cmd == "unlock" then
 		db.locked = (cmd == "lock")
-		TM:Print(db.locked and "locked." or "unlocked: drag the window titles to move them.")
+		TM:Print(db.locked and "locked." or "unlocked: drag the window titles to move them, the bottom-right corner to resize.")
 		TM:RefreshAll()
 	elseif cmd == "reset" then
 		StaticPopup_Show("TITANMETER_RESET")

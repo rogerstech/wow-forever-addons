@@ -3,10 +3,79 @@ local ADDON, TM = ...
 
 local BAR_TEX = "Interface\\TargetingFrame\\UI-StatusBar"
 local HEADER_H = 18
+local GRIP = "Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-"
+local MIN_W, MAX_W, MAX_ROWS = 120, 600, 40
 
 local function SavePos(win)
 	local point, _, relPoint, x, y = win:GetPoint(1)
 	TM.db.pos[win.key] = { point, relPoint, x, y }
+end
+
+local function RefreshWin(win)
+	if win.key == "meter" then TM:RefreshMeter() else TM:RefreshThreat() end
+end
+
+-- Resize grip: width follows the mouse, height snaps to whole rows.
+local function GripUpdate(grip)
+	local win = grip.win
+	local cfg = TM.db[win.key]
+	local s = win:GetEffectiveScale()
+	local cx, cy = GetCursorPosition()
+	cx, cy = cx / s, cy / s
+	local w = math.floor(math.max(MIN_W, math.min(MAX_W, cx + grip.offX - grip.left)) + 0.5)
+	local h = grip.top - (cy - grip.offY)
+	local rows = math.floor((h - HEADER_H - 3) / (cfg.rowHeight + 1) + 0.5)
+	rows = math.max(1, math.min(MAX_ROWS, rows))
+	if w ~= cfg.width or rows ~= cfg.rows then
+		cfg.width, cfg.rows = w, rows
+		RefreshWin(win)
+	end
+end
+
+local function GripStop(grip)
+	if not grip.sizing then return end
+	grip.sizing = false
+	grip:SetScript("OnUpdate", nil)
+	grip.tex:SetTexture(GRIP .. "Up")
+	SavePos(grip.win)
+	RefreshWin(grip.win)
+end
+
+local function CreateGrip(win)
+	local grip = CreateFrame("Button", nil, win)
+	grip.win = win
+	grip:SetSize(16, 16)
+	grip:SetPoint("BOTTOMRIGHT", -1, 1)
+	grip:SetFrameLevel(win:GetFrameLevel() + 20)
+	grip.tex = grip:CreateTexture(nil, "OVERLAY")
+	grip.tex:SetAllPoints()
+	grip.tex:SetTexture(GRIP .. "Up")
+	grip:SetHighlightTexture(GRIP .. "Highlight")
+	grip:SetScript("OnMouseDown", function(self, button)
+		if button ~= "LeftButton" or TM.db.locked then return end
+		-- Pin the top-left corner so only the bottom-right moves.
+		local left, top = win:GetLeft(), win:GetTop()
+		win:ClearAllPoints()
+		win:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+		local s = win:GetEffectiveScale()
+		local cx, cy = GetCursorPosition()
+		cx, cy = cx / s, cy / s
+		self.left, self.top = left, top
+		self.offX = win:GetRight() - cx
+		self.offY = cy - win:GetBottom()
+		self.sizing = true
+		self.tex:SetTexture(GRIP .. "Down")
+		self:SetScript("OnUpdate", GripUpdate)
+	end)
+	grip:SetScript("OnMouseUp", GripStop)
+	grip:SetScript("OnHide", GripStop)
+	grip:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText("Drag to resize")
+		GameTooltip:Show()
+	end)
+	grip:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	win.grip = grip
 end
 
 function TM:CreateWindow(key, defaultX, defaultY)
@@ -52,6 +121,7 @@ function TM:CreateWindow(key, defaultX, defaultY)
 	win.empty:SetJustifyH("LEFT")
 
 	win.rows = {}
+	CreateGrip(win)
 	return win
 end
 
@@ -105,5 +175,6 @@ function TM:LayoutWindow(win, cfg, repos)
 		end
 		win.placed = true
 	end
+	win.grip:SetShown(not TM.db.locked)
 	win.header.bg:SetColorTexture(TM.db.locked and 0.1 or 0.1, 0.1, TM.db.locked and 0.12 or 0.3, 0.9)
 end

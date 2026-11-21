@@ -59,7 +59,7 @@ local function Update()
 	if not mob then
 		win.title:SetText("Threat")
 		win.right:SetText("")
-		win.empty:SetText(unlocked and "No hostile target. Drag the title to move." or "No hostile target.")
+		win.empty:SetText(unlocked and "No hostile target. Drag the title to move, the corner to resize." or "No hostile target.")
 		return HideRows(1)
 	end
 	win.title:SetFormattedText("Threat: %s", UnitName(mob))
@@ -139,7 +139,7 @@ function TM:SetupThreat()
 		GameTooltip:SetText("TitanMeter threat")
 		GameTooltip:AddLine("100% = has aggro. Others: how close they are to pulling it.", 1, 1, 1, true)
 		GameTooltip:AddLine("Red bar = has aggro, orange = 80% or more.", 1, 1, 1, true)
-		if not TM.db.locked then GameTooltip:AddLine("Drag to move (/tmeter lock when done)", 0.6, 0.8, 1) end
+		if not TM.db.locked then GameTooltip:AddLine("Drag to move, corner to resize (/tmeter lock when done)", 0.6, 0.8, 1) end
 		GameTooltip:Show()
 	end)
 	win.header:SetScript("OnLeave", function() GameTooltip:Hide() end)
