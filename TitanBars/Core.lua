@@ -82,6 +82,8 @@ function TB:FillDefaults()
 	db.extras = db.extras or {}
 	if db.hideExtraArt == nil then db.hideExtraArt = true end
 	if db.autoRankUp == nil then db.autoRankUp = true end
+	if db.colorRange == nil then db.colorRange = true end
+	if db.colorMana == nil then db.colorMana = true end
 end
 
 function TB:CopyProfileFrom(name)
@@ -161,6 +163,7 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		TB:RefreshAll()
 		TB:SetupExtras()
 		TB:SetupPanel()
+		TB:SetupButtonColors()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		TB:ImportBlizzardKeys()
 		TB:ApplyBindings()

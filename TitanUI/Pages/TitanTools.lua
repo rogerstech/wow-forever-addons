@@ -31,6 +31,40 @@ local function Build(p, TT)
 	p:Check("Accept and turn in quests (hold Shift to skip)",
 		function() return db.quest.enabled end, function(v) db.quest.enabled = v end)
 
+	p:Header("Blessing helper (paladin)")
+	local b = TT.BlessCfg and TT:BlessCfg()
+	if b then
+		p:Check("Show the blessing button", function() return b.enabled end,
+			function(v) b.enabled = v; TT:UpdateBlessEnabled() end,
+			"One button (or key) that blesses the next group member missing their blessing. Prepared between fights.")
+		p:Check("Show it while solo too", function() return b.solo end,
+			function(v) b.solo = v; TT:UpdateBlessEnabled() end)
+		p:Slider("Re-bless when less than (seconds left)", 0, 300, 10, function() return b.refresh end,
+			function(v) b.refresh = v; TT:UpdateBless() end)
+		local function Options()
+			local list = { { 0, "No blessing" } }
+			for _, bl in ipairs(TT.BLESSINGS) do
+				local name = TT.SpellName(bl.id) or bl.key
+				table.insert(list, { bl.id, name .. (TT.BlessKnown(bl.id) and "" or "  |cff8a8a96(not learned)|r") })
+			end
+			return list
+		end
+		p:Choice("Everyone else / fallback", Options, function() return b.fallback end,
+			function(v) b.fallback = v; TT:UpdateBless() end,
+			"Used when a class's blessing isn't learned yet.")
+		for _, c in ipairs(TT.BLESS_CLASSES) do
+			local label = (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[c.class]) or c.class
+			local col = RAID_CLASS_COLORS and RAID_CLASS_COLORS[c.class]
+			if col then label = ("|cff%02x%02x%02x%s|r"):format(math.floor(col.r * 255), math.floor(col.g * 255), math.floor(col.b * 255), label) end
+			p:Choice(label, Options, function()
+				local v = b.perClass[c.class]
+				if v == nil then v = c.default end
+				return v
+			end, function(v) b.perClass[c.class] = v; TT:UpdateBless() end)
+		end
+		p:Note("Salvation is never cast on you. Bind a key: Esc > Options > Keybindings > AddOns > TitanTools.")
+	end
+
 	p:Header("Move")
 	p:Buttons({
 		{ function() return TT.unlocked and "Lock frames" or "Unlock frames" end,

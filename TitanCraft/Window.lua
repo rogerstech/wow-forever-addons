@@ -39,7 +39,7 @@ local function Button(parent, text, w)
 	return b
 end
 
-local function Hex(c) return ("|cff%02x%02x%02x"):format(c.r * 255, c.g * 255, c.b * 255) end
+local function Hex(c) return ("|cff%02x%02x%02x"):format(math.floor(c.r * 255), math.floor(c.g * 255), math.floor(c.b * 255)) end
 
 local function LinkRecipe(id, info)
 	local link = (C_TradeSkillUI.GetRecipeLink and C_TradeSkillUI.GetRecipeLink(id)) or (info and info.hyperlink)

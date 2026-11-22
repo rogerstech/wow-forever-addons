@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: TitanGear
+## Notes: One-click gear sets: save your tank gear and your ret/questing gear, then swap with a click or a key.
+## Author: Adam Rogers
+## Version: 1.0.0
+## SavedVariables: TitanGearDB
+## IconTexture: Interface\Icons\INV_Shield_06
+
+TitanGear.lua

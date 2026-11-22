@@ -8,7 +8,11 @@ local DEFAULTS = {
 	aggro = { enabled = true, groupOnly = false },
 	vendor = { repair = true, junk = true },
 	quest = { enabled = true },
+	bless = { enabled = true, refresh = 60, solo = false, scale = 1, fallback = 19740, perClass = {} },
 }
+
+BINDING_HEADER_TITANTOOLS = "TitanTools"
+_G["BINDING_NAME_CLICK TitanToolsBless:LeftButton"] = "Blessing helper: bless the next person"
 
 local function Merge(dst, src)
 	for k, v in pairs(src) do
@@ -147,6 +151,7 @@ function TT:SetUnlocked(on)
 	-- Modules show a placeholder while unlocked so there is something to drag.
 	if self.UpdateReminders then self:UpdateReminders() end
 	if self.UpdateToTUnlocked then self:UpdateToTUnlocked() end
+	if self.UpdateBlessEnabled then self:UpdateBlessEnabled() end
 	if self.RefreshConfig then self:RefreshConfig() end
 	self:Print(on and "Unlocked. Drag the green boxes, mouse wheel to resize, /ttools lock when done." or "Locked.")
 end
@@ -332,6 +337,7 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		TT:SetupAggro()
 		TT:SetupQuests()
 		TT:SetupMail()
+		TT:SetupBlessings()
 	elseif event == "PLAYER_REGEN_DISABLED" then
 		if TT.unlocked then TT:SetUnlocked(false) end
 	elseif event == "PLAYER_REGEN_ENABLED" then

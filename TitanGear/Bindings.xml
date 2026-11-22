@@ -1,0 +1,7 @@
+<Bindings>
+	<Binding name="TITANGEAR_SET1" header="TITANGEAR">TitanGear:EquipIndex(1)</Binding>
+	<Binding name="TITANGEAR_SET2">TitanGear:EquipIndex(2)</Binding>
+	<Binding name="TITANGEAR_SET3">TitanGear:EquipIndex(3)</Binding>
+	<Binding name="TITANGEAR_SET4">TitanGear:EquipIndex(4)</Binding>
+	<Binding name="TITANGEAR_NEXT">TitanGear:EquipNext()</Binding>
+</Bindings>

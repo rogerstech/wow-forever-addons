@@ -1,0 +1,10 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<!-- One group member. The secure part (click to target, right-click menu) is Blizzard's
+	     SecureUnitButtonTemplate; TitanUnits.lua adds the bars and text. -->
+	<Button name="TitanUnitsButtonTemplate" inherits="SecureUnitButtonTemplate" virtual="true">
+		<Size x="120" y="38"/>
+		<Scripts>
+			<OnLoad function="TitanUnits_ButtonOnLoad" inherit="prepend"/>
+		</Scripts>
+	</Button>
+</Ui>

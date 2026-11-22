@@ -14,6 +14,13 @@ local function General(p, TB)
 	p:Check("Show cooldown numbers on buttons",
 		function() return GetCVarBool("countdownForCooldowns") end,
 		function(v) SetCVar("countdownForCooldowns", v and "1" or "0") end)
+	p:Check("Red icon when the target is out of range",
+		function() return TB.db.colorRange end,
+		function(v) TB.db.colorRange = v; TB:RefreshButtonColors() end,
+		"Blizzard only turns the keybind text red. This tints the whole icon.")
+	p:Check("Strong blue icon when you're short on mana",
+		function() return TB.db.colorMana end,
+		function(v) TB.db.colorMana = v; TB:RefreshButtonColors() end)
 	p:Check("Move buttons to a new spell rank when you train it",
 		function() return TB.db.autoRankUp end,
 		function(v) TB.db.autoRankUp = v end,

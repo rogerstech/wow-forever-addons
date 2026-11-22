@@ -1,14 +1,16 @@
 # WoW Forever Addons
 
-Ten addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Twelve addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
 |-------|--------------|---------|
 | **TitanUI** | One settings window for all of them: addons (and their pages) in a tree on the left, settings on the right. | `/tui` |
 | **TitanCraft** | A faster crafting window you can move. Sorts recipes that give a skill point to the top, crafts your next skill-up in one click, shows what you can make and what you're missing. | `/tcraft` |
-| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. Info panel along the top or bottom with coordinates, zone, clock, FPS/latency, gold, durability, bag space and XP, holding the bags and menu buttons. | `/tb` |
-| **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
+| **TitanUnits** | Party and raid frames for tanking: health and mana, range fading, your target outlined, and a red border on anyone who has pulled a mob off you. | `/tunits` |
+| **TitanGear** | One-click gear sets (e.g. Tank and Ret): a small bar, keys, and `/tgear Tank` for macros. | `/tgear` |
+| **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons; icons turn red out of range and strong blue when you're short on mana. Info panel along the top or bottom with coordinates, zone, clock, FPS/latency, gold, durability, bag space and XP, holding the bags and menu buttons. | `/tb` |
+| **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, an Open All mail button, and a paladin blessing helper (one button or key blesses the next person who needs it). | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. Viewport (shrink the game world to leave black space for your UI), an optional square, resizable minimap, and hiding the XP / reputation bars. | `/tf` |
 | **TitanChat** | A cleaner, flatter chat window: dark panel, flat tabs with a class-coloured underline, Arial Narrow font, tidy input box, side buttons hidden. Restyles Blizzard's chat, so tabs, whispers and links all work as normal. | `/tchat` |
 | **TitanQuests** | A cleaner quest tracker that replaces Blizzard's. Quests grouped by zone, fold quests or zones away, quest item buttons, and one button (or key) to minimize it. Minimizes itself in dungeons and raids. | `/tquests` |
@@ -26,7 +28,7 @@ Each addon works on its own, so install only the ones you want.
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter`, `TitanChat`, `TitanBags`, `TitanCraft` and `TitanUI` folders into
+2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter`, `TitanChat`, `TitanBags`, `TitanCraft`, `TitanUnits`, `TitanGear` and `TitanUI` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
@@ -303,6 +305,37 @@ appears instead of Blizzard's.
   for specializations or anything TitanCraft doesn't show. Other players' linked professions and
   guild lists always use Blizzard's window.
 - `/tcraft blizzard on` goes back to Blizzard's window for good (`off` to return). Settings are in TitanUI.
+
+## TitanUnits
+
+Party and raid frames for tanking. Left-click a frame to target, right-click for the menu.
+
+- Health bar (class colours) with health %, a thin mana/power bar, "Dead" / "Offline".
+- **Red border** on anyone who has pulled a mob off you. It uses the game's threat state; if the game hides
+  that in combat, it falls back to whether your current target is hitting them.
+- **White outline** on your current target. Out-of-range members fade.
+- Party is a column (or a row); in a raid, one column per group.
+- Hides Blizzard's party and raid frames (untick in TitanUI to get them back).
+- `/tunits unlock` to drag them, `/tunits solo` to show your own frame while solo (to set them up).
+  Everything else is in TitanUI. Size and layout changes made in combat wait until combat ends.
+
+## TitanGear
+
+1. Put on your tank gear, click **+** on the gear bar, call it `Tank`.
+2. Put on your ret / questing gear, click **+**, call it `Ret`.
+3. Click a set's icon to put it on (green border = wearing it). Right-click a set to save your current gear into it or delete it.
+
+Keys: Esc > Options > Keybindings > AddOns > TitanGear (sets 1-4, or one key that swaps to the next set).
+Macros: `/tgear Tank`. Armour can't change in combat, so a swap asked for then happens as soon as combat ends.
+Sets are the game's own equipment sets, saved on the server.
+
+## Blessing helper (TitanTools, paladins)
+
+A small button that shows who needs a blessing next, e.g. `Might Tankbro 3/5`. Click it (or bind a key: Esc >
+Options > Keybindings > AddOns > TitanTools) to cast it, then click again for the next person. It also re-blesses
+anyone with under a minute left. Which blessing each class gets is set in TitanUI > TitanTools (defaults: Might for
+warriors, rogues and hunters; Wisdom for casters; Kings for paladins and druids). Salvation is never cast on you.
+Blizzard only lets the button be prepared out of combat, so in combat it shows "In combat". Move it with `/ttools unlock`.
 
 ## Notes
 

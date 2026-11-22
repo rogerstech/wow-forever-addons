@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: TitanUnits
+## Notes: Party and raid frames for tanking: health, mana, range, your target, and a red border on anyone who has pulled a mob off you.
+## Author: Adam Rogers
+## Version: 1.0.0
+## SavedVariables: TitanUnitsDB
+## IconTexture: Interface\Icons\Spell_Holy_SealOfProtection
+
+Template.xml
+TitanUnits.lua

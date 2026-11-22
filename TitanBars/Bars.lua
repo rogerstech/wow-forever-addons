@@ -67,6 +67,7 @@ local function CreateButton(bar, i)
 		end
 	end)
 	btn:HookScript("OnEnter", function(self) TB:OnButtonEnter(self) end)
+	TB:HookButtonColors(btn)
 
 	bar:SetFrameRef("button" .. i, btn)
 	bar:SetFrameRef("key" .. i, key)
