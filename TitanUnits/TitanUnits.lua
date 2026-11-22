@@ -396,6 +396,7 @@ function TU:ApplyLayout()
 	end
 	self:ApplyBlizzard()
 	self:PlaceMover()
+	if self.testMode then self:ShowTest(self.testMode) end
 	self:UpdateAll()
 end
 
@@ -496,9 +497,101 @@ function TU:PlaceMover()
 	end
 end
 
+---------------------------------------------------------------------------
+-- Test view: a fake full party or raid, drawn exactly like the real frames (same size,
+-- spacing and layout), so you can place them without being in a group. These are plain
+-- frames, not the real secure ones, so they can't target anyone.
+local fakes = {}
+local FAKE_CLASSES = { "WARRIOR", "PRIEST", "MAGE", "ROGUE", "HUNTER", "DRUID", "WARLOCK", "SHAMAN", "PALADIN" }
+local FAKE_NAMES = { "Thrall", "Jaina", "Uther", "Valeera", "Rexxar", "Malfurion", "Gul'dan", "Drekthar",
+	"Tirion", "Sylvanas", "Cairne", "Vol'jin", "Saurfang", "Garona", "Zul'jin", "Rokhan", "Nazgrel", "Eitrigg" }
+
+local function FakeButton(i)
+	local b = fakes[i]
+	if b then return b end
+	b = CreateFrame("Button", nil, UIParent)
+	TitanUnits_ButtonOnLoad(b)
+	table.remove(buttons)        -- not a real unit: keep it out of the live updates
+	b:SetScript("OnEnter", nil)
+	b:EnableMouse(false)
+	b:SetFrameStrata("MEDIUM")
+	fakes[i] = b
+	return b
+end
+
+local function FillFake(b, i)
+	local db = TU.db
+	local class = FAKE_CLASSES[(i - 1) % #FAKE_CLASSES + 1]
+	local c = RAID_CLASS_COLORS[class] or { r = 0.3, g = 0.75, b = 0.3 }
+	local pct = (i * 37) % 70 + 30
+	b.unit = nil
+	b.name:SetText(i == 1 and (UnitName("player") or "You") or FAKE_NAMES[(i - 2) % #FAKE_NAMES + 1])
+	b.name:SetTextColor(1, 1, 1)
+	b.hp:SetMinMaxValues(0, 100)
+	b.power:SetMinMaxValues(0, 100)
+	b.power:SetValue((i * 53) % 100)
+	b.power:GetStatusBarTexture():SetVertexColor(class == "WARRIOR" and 0.8 or 0.2, class == "WARRIOR" and 0.2 or 0.4, class == "WARRIOR" and 0.2 or 1)
+	local tex = b.hp:GetStatusBarTexture()
+	b.status:SetText("")
+	if i == 4 then
+		b.hp:SetValue(0); b.hpText:SetText(""); b.status:SetText("Dead"); tex:SetVertexColor(0.35, 0.35, 0.38)
+	elseif i == 9 then
+		b.hp:SetValue(100); b.hpText:SetText(""); b.status:SetText("Offline"); tex:SetVertexColor(0.35, 0.35, 0.38)
+	else
+		b.hp:SetValue(pct)
+		b.hpText:SetText(db.healthText == "percent" and (pct .. "%") or "")
+		if db.classColors then tex:SetVertexColor(c.r, c.g, c.b) else
+			tex:SetVertexColor(0.25, 0.7, 0.25); b.name:SetTextColor(c.r, c.g, c.b) end
+	end
+	local aggro = db.aggro and (i == 2 or i == 7) and 1 or 0
+	for _, l in ipairs(b.aggro) do l:SetAlpha(aggro) end
+	for _, l in ipairs(b.targetEdge) do l:SetAlpha(i == 3 and 0.9 or 0) end
+	b.v:SetAlpha(i == 5 and db.rangeAlpha or 1)
+end
+
+function TU:ShowTest(mode)
+	self.testMode = mode
+	for _, b in ipairs(fakes) do b:Hide() end
+	if not mode then return end
+	local db = self.db
+	local w, h, gap = math.floor(db.width), math.floor(db.height), math.floor(db.spacing)
+	local home = mode == "raid" and raidAnchor or anchor
+	local count = mode == "raid" and 40 or 5
+	for i = 1, count do
+		local b = FakeButton(i)
+		b:SetParent(home)
+		b:SetSize(w, h)
+		self:StyleButton(b)
+		b:ClearAllPoints()
+		if mode == "raid" then
+			local col, row = math.floor((i - 1) / 5), (i - 1) % 5
+			b:SetPoint("TOPLEFT", home, "TOPLEFT", col * (w + gap), -row * (h + gap))
+		elseif db.grow == "right" then
+			b:SetPoint("TOPLEFT", home, "TOPLEFT", (i - 1) * (w + gap), 0)
+		else
+			b:SetPoint("TOPLEFT", home, "TOPLEFT", 0, -(i - 1) * (h + gap))
+		end
+		FillFake(b, i)
+		b:Show()
+	end
+end
+
+-- /tunits test party | raid | off. Turns on the move boxes too, so you can drag it into place.
+function TU:SetTest(mode)
+	if mode and InCombatLockdown() then return self:Print("not in combat.") end
+	if mode == self.testMode then mode = nil end
+	self:ShowTest(mode)
+	if mode then
+		if self.db.locked then self:SetLocked(false) end
+		self:Print(("test view: a fake full %s. Drag the %s box to place it; /tunits test off (or lock) when done.")
+			:format(mode, mode == "raid" and "blue" or "green"))
+	end
+end
+
 function TU:SetLocked(locked)
 	if not locked and InCombatLockdown() then return self:Print("can't move frames in combat.") end
 	self.db.locked = locked
+	if locked and self.testMode then self:ShowTest(nil) end
 	self:PlaceMover()
 	if not locked then
 		self:Print("drag the green box (party) and the blue box (raid, 8 groups) where you want them; lock them in /tui when done.")
@@ -546,12 +639,18 @@ SlashCmdList.TITANUNITS = function(msg)
 		TU.db.showSolo = not TU.db.showSolo
 		TU:ApplyLayout()
 		TU:Print(TU.db.showSolo and "showing your own frame while solo (handy for setting up)." or "hidden while solo.")
+	elseif cmd:match("^test") then
+		local m = cmd:match("^test%s*(%a*)")
+		if m == "off" then TU:SetTest(nil)
+		elseif m == "raid" then TU:SetTest("raid")
+		else TU:SetTest("party") end
 	elseif cmd == "reset" then
 		TU.db.pos, TU.db.raidPos = nil, nil
 		TU:ApplyLayout()
 	else
 		TU:Print("/tunits unlock | lock - move the player, target and group frames")
 		print("  /tunits solo - show your own frame while solo (to set them up)")
+		print("  /tunits test party | raid | off - a fake full party or raid to place the frames")
 		print("  /tunits reset - back to the default spot.  All settings: /tui units")
 	end
 end
@@ -588,7 +687,7 @@ ev:SetScript("OnEvent", function(_, event, a1)
 		TU:ApplyLayout()
 		TU:SetupSolo()
 		for e in pairs(UNIT_EVENTS) do pcall(ev.RegisterEvent, ev, e) end
-		for _, e in ipairs({ "PLAYER_TARGET_CHANGED", "GROUP_ROSTER_UPDATE", "PLAYER_REGEN_ENABLED", "PLAYER_ENTERING_WORLD" }) do
+		for _, e in ipairs({ "PLAYER_TARGET_CHANGED", "GROUP_ROSTER_UPDATE", "PLAYER_REGEN_ENABLED", "PLAYER_REGEN_DISABLED", "PLAYER_ENTERING_WORLD" }) do
 			ev:RegisterEvent(e)
 		end
 		-- Range and "is my target hitting them" have no events: check a few times a second.
@@ -605,6 +704,8 @@ ev:SetScript("OnEvent", function(_, event, a1)
 	elseif event == "PLAYER_TARGET_CHANGED" then
 		TU:ForUnit(nil, TU.UpdateTarget)
 		TU:ForUnit(nil, TU.UpdateAggro)
+	elseif event == "PLAYER_REGEN_DISABLED" then
+		if TU.testMode then TU:ShowTest(nil) end
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		TU:FlushClicks()
 		if pendingLayout then TU:ApplyLayout() end

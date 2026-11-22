@@ -18,6 +18,12 @@ local function Build(p, TU)
 			"Unlocked: green box = party frames, blue box = raid frames (8 groups). Each moves on its own. Raid frames only appear in a raid." },
 		{ "Reset positions", function() db.pos, db.raidPos = nil, nil; TU:ApplyLayout() end },
 	})
+	p:Buttons({
+		{ function() return TU.testMode == "party" and "Stop test" or "Test: full party" end,
+			function() TU:SetTest("party") end, "Shows a fake full party so you can place and size the frames." },
+		{ function() return TU.testMode == "raid" and "Stop test" or "Test: full raid" end,
+			function() TU:SetTest("raid") end, "Shows a fake 40-person raid (8 groups) so you can place and size the frames." },
+	})
 
 	p:Header("Who shows")
 	p:Check("Show yourself in party frames", Get("showPlayer"), Set("showPlayer"))
