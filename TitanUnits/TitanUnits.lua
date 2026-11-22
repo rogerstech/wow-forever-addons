@@ -247,14 +247,14 @@ function TU:UpdateAggro(b)
 		return
 	end
 	local ok, status = pcall(UnitThreatSituation, u)
-	if ok and status ~= nil and not Secret(status) then
+	if ok and not Secret(status) and status ~= nil then
 		Set(status >= 2, 1, 0)
 		return
 	end
 	-- The game hid the overall threat state: fall back to "is my target hitting them?".
 	if UnitExists("target") and UnitCanAttack("player", "target") then
 		local ok2, isTanking = pcall(UnitDetailedThreatSituation, u, "target")
-		if ok2 and isTanking ~= nil then
+		if ok2 and (Secret(isTanking) or isTanking ~= nil) then
 			Set(isTanking, 1, 0)
 			return
 		end
@@ -274,7 +274,7 @@ function TU:UpdateRange(b)
 		return
 	end
 	local ok, inRange, checked = pcall(UnitInRange, u)
-	if not ok or inRange == nil then
+	if not ok or (not Secret(inRange) and inRange == nil) then
 		b.v:SetAlpha(1)
 		return
 	end
@@ -487,8 +487,10 @@ SlashCmdList.TITANUNITS = function(msg)
 	local cmd = strtrim(msg or ""):lower()
 	if cmd == "unlock" then
 		TU:SetLocked(false)
+		TU:SetSoloLocked(false)
 	elseif cmd == "lock" then
 		TU:SetLocked(true)
+		TU:SetSoloLocked(true)
 	elseif cmd == "solo" then
 		TU.db.showSolo = not TU.db.showSolo
 		TU:ApplyLayout()
@@ -497,7 +499,7 @@ SlashCmdList.TITANUNITS = function(msg)
 		TU.db.pos = nil
 		TU:ApplyLayout()
 	else
-		TU:Print("/tunits unlock | lock - move the group frames")
+		TU:Print("/tunits unlock | lock - move the player, target and group frames")
 		print("  /tunits solo - show your own frame while solo (to set them up)")
 		print("  /tunits reset - back to the default spot.  All settings: /tui units")
 	end
@@ -528,6 +530,7 @@ ev:SetScript("OnEvent", function(_, event, a1)
 		raid = Header("TitanUnitsRaid", true)
 		TU.party, TU.raid = party, raid
 		TU:ApplyLayout()
+		TU:SetupSolo()
 		for e in pairs(UNIT_EVENTS) do pcall(ev.RegisterEvent, ev, e) end
 		for _, e in ipairs({ "PLAYER_TARGET_CHANGED", "GROUP_ROSTER_UPDATE", "PLAYER_REGEN_ENABLED", "PLAYER_ENTERING_WORLD" }) do
 			ev:RegisterEvent(e)

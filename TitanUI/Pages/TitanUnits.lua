@@ -42,9 +42,44 @@ local function Build(p, TU)
 	p:Note("White outline = your current target. Left-click a frame to target, right-click for the menu.")
 end
 
+local function Solo(p, TU)
+	local c = TU:SoloCfg()
+	local function Get(k) return function() return c[k] end end
+	local function Set(k) return function(v) c[k] = v; TU:ApplySolo() end end
+
+	p:Check("Use TitanUnits player and target frames", Get("enabled"), Set("enabled"))
+	p:Check("Hide Blizzard's player and target frames", Get("hideBlizzard"), function(v)
+		c.hideBlizzard = v
+		TU:ApplySolo()
+		if not v then UI:Print("if Blizzard's frames don't come back in the right spot, type /reload.") end
+	end)
+	p:Buttons({
+		{ function() return c.locked and "Unlock to move" or "Lock" end, function() TU:SetSoloLocked(not c.locked) end,
+			"Unlocked: drag the player or target frame (target something to see its frame)." },
+		{ "Reset positions", function() wipe(c.pos); TU:ApplySolo() end },
+	})
+	p:Header("Portrait")
+	p:Choice("Portrait", { { "3d", "Animated 3D face" }, { "2d", "Flat picture" }, { "class", "Class icon" } },
+		Get("portrait"), Set("portrait"),
+		"The 3D face needs the unit to be loaded near you; further away it shows the flat picture.")
+	p:Header("Size")
+	p:Slider("Width", 200, 400, 2, Get("width"), Set("width"))
+	p:Slider("Height", 44, 100, 1, Get("height"), Set("height"))
+	p:Slider("Scale", 0.5, 2, 0.05, Get("scale"), Set("scale"), P)
+	p:Header("Target")
+	p:Check("Show your threat (green border = it's on you, red = it isn't)", Get("threat"), Set("threat"))
+	p:Check("Show the target's buffs and debuffs", Get("auras"), Set("auras"))
+	p:Check("Only my debuffs", Get("myDebuffsOnly"), Set("myDebuffsOnly"))
+	p:Slider("Buff / debuff icon size", 14, 40, 1, Get("auraSize"), Set("auraSize"))
+	p:Note("Left-click a frame to target, right-click for the usual menu. Size and position changes made in combat apply when it ends.")
+end
+
 UI:Register({
 	name = "TitanUnits", global = "TitanUnits",
-	summary = "Party and raid frames for tanking: health, mana, range, aggro warning.",
-	ready = function(ns) return ns.db ~= nil and ns.party ~= nil end,
-	pages = { { key = "main", label = "TitanUnits", build = Build, noCombat = true } },
+	summary = "Modern player/target frames with animated 3D faces, and tanking party/raid frames.",
+	ready = function(ns) return ns.db ~= nil and ns.party ~= nil and ns.SoloCfg ~= nil end,
+	pages = {
+		{ key = "solo", label = "Player & target", build = Solo, noCombat = true },
+		{ key = "group", label = "Group frames", build = Build, noCombat = true },
+	},
 })
