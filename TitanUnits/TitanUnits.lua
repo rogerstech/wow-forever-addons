@@ -29,12 +29,17 @@ local DEFAULTS = {
 	aggro = true,
 	locked = true,
 	pos = nil,            -- { x, y } top-left in screen pixels
+	bossEnabled = true,   -- TitanUnits boss frames (boss1-boss5)
+	hideBlizzardBoss = true,
 }
 
 local TEX = "Interface\\TargetingFrame\\UI-StatusBar"
 local AGGRO = CreateColor(1, 0.15, 0.1, 1)
 local buttons = {}
-local anchor, raidAnchor, party, raid, mover, raidMover
+local anchor, raidAnchor, bossAnchor, party, raid, mover, raidMover, bossMover
+local bosses = {}
+local MAX_BOSSES = 5
+local ON_ME, OFF_ME = CreateColor(0.25, 0.9, 0.3, 1), CreateColor(0.95, 0.2, 0.15, 1)
 local pendingLayout = false
 local curve
 
@@ -105,6 +110,7 @@ function TU:FlushClicks()
 end
 
 function TitanUnits_ButtonOnLoad(b)
+	b.isBoss = false
 	RegisterClicks(b)
 	-- Everything visible sits on a plain child frame, so fading it for range never
 	-- touches the secure button.
@@ -223,6 +229,8 @@ function TU:UpdateHealth(b)
 	local tex = b.hp:GetStatusBarTexture()
 	if dead or offline then
 		tex:SetVertexColor(0.35, 0.35, 0.38)
+	elseif b.isBoss then
+		tex:SetVertexColor(0.8, 0.15, 0.12)
 	elseif self.db.classColors then
 		local cc = ClassColor(u)
 		if cc then tex:SetVertexColor(cc.r, cc.g, cc.b) else tex:SetVertexColor(0.3, 0.75, 0.3) end
@@ -259,6 +267,22 @@ function TU:UpdateAggro(b)
 	local function Set(flag, yes, no)
 		for _, l in ipairs(edges) do AlphaFromBoolean(l, flag, yes, no) end
 	end
+	if b.isBoss then
+		-- Boss frames: green border while the boss is attacking you, red while it isn't.
+		local fighting = UnitAffectingCombat(u)
+		if not self.db.aggro or (not Secret(fighting) and not fighting) then Set(false, 1, 0) return end
+		local ok, isTanking = pcall(UnitDetailedThreatSituation, "player", u)
+		if not ok or (not Secret(isTanking) and isTanking == nil) then Set(false, 1, 0) return end
+		for _, l in ipairs(edges) do
+			if l.SetVertexColorFromBoolean then
+				l:SetVertexColorFromBoolean(isTanking, ON_ME, OFF_ME)
+			elseif not Secret(isTanking) then
+				l:SetVertexColor((isTanking and ON_ME or OFF_ME):GetRGB())
+			end
+			l:SetAlpha(1)
+		end
+		return
+	end
 	if not self.db.aggro or IsMe(u) then
 		Set(false, 1, 0)
 		return
@@ -286,7 +310,7 @@ end
 
 function TU:UpdateRange(b)
 	local u = b.unit
-	if IsMe(u) then
+	if IsMe(u) or b.isBoss then
 		b.v:SetAlpha(1)
 		return
 	end
@@ -350,15 +374,29 @@ function TU:ApplyLayout()
 
 	-- Party and raid frames each have their own spot. Until the raid frames are moved,
 	-- they start where the party frames are.
-	for _, a in ipairs({ { anchor, db.pos }, { raidAnchor, db.raidPos or db.pos } }) do
-		local fr, pos = a[1], a[2]
+	for _, a in ipairs({ { anchor, db.pos }, { raidAnchor, db.raidPos or db.pos }, { bossAnchor, db.bossPos, true } }) do
+		local fr, pos, isBoss = a[1], a[2], a[3]
 		fr:SetScale(db.scale)
 		fr:ClearAllPoints()
 		if pos then
 			local s = fr:GetEffectiveScale()
 			fr:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", pos.x / s, pos.y / s)
+		elseif isBoss then
+			fr:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -40, -300)
 		else
 			fr:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -260)
+		end
+	end
+	bossAnchor:SetSize(w, 10)
+	-- Boss frames: one column, boss 1 at the top.
+	for i, b in ipairs(bosses) do
+		b:ClearAllPoints()
+		b:SetPoint("TOPLEFT", bossAnchor, "TOPLEFT", 0, -(i - 1) * (h + gap + 4))
+		if db.bossEnabled then
+			RegisterUnitWatch(b)
+		else
+			UnregisterUnitWatch(b)
+			b:Hide()
 		end
 	end
 
@@ -395,9 +433,53 @@ function TU:ApplyLayout()
 		raid:Hide()
 	end
 	self:ApplyBlizzard()
+	self:ApplyBlizzardBoss()
 	self:PlaceMover()
 	if self.testMode then self:ShowTest(self.testMode) end
 	self:UpdateAll()
+end
+
+-- Boss frames: five secure unit buttons for boss1-boss5, shown by the game only while
+-- that boss exists (unit watch).
+local function CreateBosses()
+	for i = 1, MAX_BOSSES do
+		local b = CreateFrame("Button", "TitanUnitsBoss" .. i, bossAnchor, "TitanUnitsButtonTemplate")
+		b.isBoss = true
+		b:SetAttribute("unit", "boss" .. i)
+		b:SetAttribute("*type1", "target")
+		b:SetAttribute("*type2", "togglemenu")
+		b:Hide()
+		bosses[i] = b
+	end
+end
+
+-- Blizzard's boss frames: made invisible and unclickable instead of hidden, because
+-- Blizzard shows them in the middle of a fight, when addons may not hide them.
+local bossHooked = false
+function TU:ApplyBlizzardBoss()
+	local c = _G.BossTargetFrameContainer
+	if not c then return end
+	local hide = self.db.bossEnabled and self.db.hideBlizzardBoss
+	if not bossHooked then
+		bossHooked = true
+		hooksecurefunc(c, "SetAlpha", function(f, a)
+			if TU.settingBossAlpha then return end
+			if TU.db.bossEnabled and TU.db.hideBlizzardBoss and a ~= 0 then
+				TU.settingBossAlpha = true
+				f:SetAlpha(0)
+				TU.settingBossAlpha = false
+			end
+		end)
+	end
+	self.settingBossAlpha = true
+	c:SetAlpha(hide and 0 or 1)
+	self.settingBossAlpha = false
+	if not InCombatLockdown() then
+		for i = 1, MAX_BOSSES do
+			local bf = _G["Boss" .. i .. "TargetFrame"]
+			if bf then bf:EnableMouse(not hide) end
+		end
+	end
 end
 
 local function Header(name, isRaid)
@@ -458,9 +540,9 @@ end
 -- Moving
 -- While unlocked, each mover shows a preview of the frames it stands for: 5 party
 -- slots, and the raid layout (8 groups of 5), so you can see the real size.
-local function Preview(m, cols, rows)
+local function Preview(m, cols, rows, extraGap)
 	local db = TU.db
-	local w, h, gap, sc = db.width, db.height, db.spacing, db.scale
+	local w, h, gap, sc = db.width, db.height, db.spacing + (extraGap or 0), db.scale
 	m:SetSize((cols * w + (cols - 1) * gap) * sc, (rows * h + (rows - 1) * gap) * sc)
 	if type(m.cells) ~= "table" then m.cells = {} end
 	local n = 0
@@ -482,7 +564,9 @@ end
 local function SavePos(m)
 	local s = m:GetEffectiveScale()
 	local pos = { x = m:GetLeft() * s, y = m:GetTop() * s }
-	if m == raidMover then TU.db.raidPos = pos else TU.db.pos = pos end
+	if m == raidMover then TU.db.raidPos = pos
+	elseif m == bossMover then TU.db.bossPos = pos
+	else TU.db.pos = pos end
 end
 
 function TU:PlaceMover()
@@ -490,10 +574,11 @@ function TU:PlaceMover()
 	local db = self.db
 	if db.grow == "right" then Preview(mover, 5, 1) else Preview(mover, 1, 5) end
 	Preview(raidMover, 8, 5)
-	for _, a in ipairs({ { mover, anchor }, { raidMover, raidAnchor } }) do
+	Preview(bossMover, 1, MAX_BOSSES, 4)
+	for _, a in ipairs({ { mover, anchor }, { raidMover, raidAnchor }, { bossMover, bossAnchor } }) do
 		a[1]:ClearAllPoints()
 		a[1]:SetPoint("TOPLEFT", a[2], "TOPLEFT")
-		a[1]:SetShown(not db.locked)
+		a[1]:SetShown(not db.locked and (a[1] ~= bossMover or db.bossEnabled))
 	end
 end
 
@@ -519,7 +604,7 @@ local function FakeButton(i)
 	return b
 end
 
-local function FillFake(b, i)
+local function FillFake(b, i, boss)
 	local db = TU.db
 	local class = FAKE_CLASSES[(i - 1) % #FAKE_CLASSES + 1]
 	local c = RAID_CLASS_COLORS[class] or { r = 0.3, g = 0.75, b = 0.3 }
@@ -544,7 +629,25 @@ local function FillFake(b, i)
 			tex:SetVertexColor(0.25, 0.7, 0.25); b.name:SetTextColor(c.r, c.g, c.b) end
 	end
 	local aggro = db.aggro and (i == 2 or i == 7) and 1 or 0
-	for _, l in ipairs(b.aggro) do l:SetAlpha(aggro) end
+	for _, l in ipairs(b.aggro) do l:SetVertexColor(1, 0.15, 0.1); l:SetAlpha(aggro) end
+	if boss then
+		-- Bosses: red bars; boss 1 is on you (green border), boss 2 is on someone else (red).
+		b.name:SetText("Test Boss " .. i)
+		b.name:SetTextColor(1, 1, 1)
+		b.status:SetText("")
+		b.hp:SetValue(pct)
+		b.hpText:SetText(db.healthText == "percent" and (pct .. "%") or "")
+		tex:SetVertexColor(0.8, 0.15, 0.12)
+		b.power:SetValue(100)
+		b.power:GetStatusBarTexture():SetVertexColor(0.2, 0.4, 1)
+		for _, l in ipairs(b.aggro) do
+			if i == 1 then l:SetVertexColor(0.25, 0.9, 0.3) else l:SetVertexColor(0.95, 0.2, 0.15) end
+			l:SetAlpha(db.aggro and i <= 2 and 1 or 0)
+		end
+		for _, l in ipairs(b.targetEdge) do l:SetAlpha(i == 1 and 0.9 or 0) end
+		b.v:SetAlpha(1)
+		return
+	end
 	for _, l in ipairs(b.targetEdge) do l:SetAlpha(i == 3 and 0.9 or 0) end
 	b.v:SetAlpha(i == 5 and db.rangeAlpha or 1)
 end
@@ -555,7 +658,7 @@ function TU:ShowTest(mode)
 	if not mode then return end
 	local db = self.db
 	local w, h, gap = math.floor(db.width), math.floor(db.height), math.floor(db.spacing)
-	local home = mode == "raid" and raidAnchor or anchor
+	local home = (mode == "raid" and raidAnchor) or (mode == "boss" and bossAnchor) or anchor
 	local count = mode == "raid" and 40 or 5
 	for i = 1, count do
 		local b = FakeButton(i)
@@ -563,7 +666,9 @@ function TU:ShowTest(mode)
 		b:SetSize(w, h)
 		self:StyleButton(b)
 		b:ClearAllPoints()
-		if mode == "raid" then
+		if mode == "boss" then
+			b:SetPoint("TOPLEFT", home, "TOPLEFT", 0, -(i - 1) * (h + gap + 4))
+		elseif mode == "raid" then
 			local col, row = math.floor((i - 1) / 5), (i - 1) % 5
 			b:SetPoint("TOPLEFT", home, "TOPLEFT", col * (w + gap), -row * (h + gap))
 		elseif db.grow == "right" then
@@ -571,7 +676,7 @@ function TU:ShowTest(mode)
 		else
 			b:SetPoint("TOPLEFT", home, "TOPLEFT", 0, -(i - 1) * (h + gap))
 		end
-		FillFake(b, i)
+		FillFake(b, i, mode == "boss")
 		b:Show()
 	end
 end
@@ -583,8 +688,10 @@ function TU:SetTest(mode)
 	self:ShowTest(mode)
 	if mode then
 		if self.db.locked then self:SetLocked(false) end
-		self:Print(("test view: a fake full %s. Drag the %s box to place it; /tunits test off (or lock) when done.")
-			:format(mode, mode == "raid" and "blue" or "green"))
+		local what = mode == "boss" and "set of 5 boss frames" or ("full " .. mode)
+		local box = mode == "raid" and "blue" or mode == "boss" and "orange" or "green"
+		self:Print(("test view: a fake %s. Drag the %s box to place it; /tunits test off (or lock) when done.")
+			:format(what, box))
 	end
 end
 
@@ -594,7 +701,7 @@ function TU:SetLocked(locked)
 	if locked and self.testMode then self:ShowTest(nil) end
 	self:PlaceMover()
 	if not locked then
-		self:Print("drag the green box (party) and the blue box (raid, 8 groups) where you want them; lock them in /tui when done.")
+		self:Print("drag the green box (party), blue box (raid, 8 groups) and orange box (boss frames) where you want them; lock them in /tui when done.")
 	end
 end
 
@@ -643,14 +750,15 @@ SlashCmdList.TITANUNITS = function(msg)
 		local m = cmd:match("^test%s*(%a*)")
 		if m == "off" then TU:SetTest(nil)
 		elseif m == "raid" then TU:SetTest("raid")
+		elseif m == "boss" or m == "bosses" then TU:SetTest("boss")
 		else TU:SetTest("party") end
 	elseif cmd == "reset" then
-		TU.db.pos, TU.db.raidPos = nil, nil
+		TU.db.pos, TU.db.raidPos, TU.db.bossPos = nil, nil, nil
 		TU:ApplyLayout()
 	else
 		TU:Print("/tunits unlock | lock - move the player, target and group frames")
 		print("  /tunits solo - show your own frame while solo (to set them up)")
-		print("  /tunits test party | raid | off - a fake full party or raid to place the frames")
+		print("  /tunits test party | raid | boss | off - fake frames to place and size them")
 		print("  /tunits reset - back to the default spot.  All settings: /tui units")
 	end
 end
@@ -677,17 +785,21 @@ ev:SetScript("OnEvent", function(_, event, a1)
 		anchor:SetSize(10, 10)
 		raidAnchor = CreateFrame("Frame", "TitanUnitsRaidAnchor", UIParent)
 		raidAnchor:SetSize(10, 10)
+		bossAnchor = CreateFrame("Frame", "TitanUnitsBossAnchor", UIParent)
+		bossAnchor:SetSize(TU.db.width, 10)
 		mover = CreateMover("Party frames  |cffffffff(drag to move)|r", 0.2, 0.8, 0.3)
 		raidMover = CreateMover("Raid frames: 8 groups  |cffffffff(drag to move)|r", 0.25, 0.55, 1)
 		-- The party box is smaller: keep it on top so both can be grabbed when they overlap.
 		mover:SetFrameLevel(raidMover:GetFrameLevel() + 20)
+		bossMover = CreateMover("Boss frames  |cffffffff(drag to move)|r", 1, 0.55, 0.1)
+		CreateBosses()
 		party = Header("TitanUnitsParty", false)
 		raid = Header("TitanUnitsRaid", true)
 		TU.party, TU.raid = party, raid
 		TU:ApplyLayout()
 		TU:SetupSolo()
 		for e in pairs(UNIT_EVENTS) do pcall(ev.RegisterEvent, ev, e) end
-		for _, e in ipairs({ "PLAYER_TARGET_CHANGED", "GROUP_ROSTER_UPDATE", "PLAYER_REGEN_ENABLED", "PLAYER_REGEN_DISABLED", "PLAYER_ENTERING_WORLD" }) do
+		for _, e in ipairs({ "PLAYER_TARGET_CHANGED", "GROUP_ROSTER_UPDATE", "PLAYER_REGEN_ENABLED", "PLAYER_REGEN_DISABLED", "PLAYER_ENTERING_WORLD", "INSTANCE_ENCOUNTER_ENGAGE_UNIT", "UNIT_TARGETABLE_CHANGED" }) do
 			ev:RegisterEvent(e)
 		end
 		-- Range and "is my target hitting them" have no events: check a few times a second.

@@ -15,15 +15,22 @@ local function Build(p, TU)
 	end)
 	p:Buttons({
 		{ function() return db.locked and "Unlock to move" or "Lock" end, function() TU:SetLocked(not db.locked) end,
-			"Unlocked: green box = party frames, blue box = raid frames (8 groups). Each moves on its own. Raid frames only appear in a raid." },
-		{ "Reset positions", function() db.pos, db.raidPos = nil, nil; TU:ApplyLayout() end },
+			"Unlocked: green box = party, blue box = raid (8 groups), orange box = boss frames. Each moves on its own." },
+		{ "Reset positions", function() db.pos, db.raidPos, db.bossPos = nil, nil, nil; TU:ApplyLayout() end },
 	})
 	p:Buttons({
 		{ function() return TU.testMode == "party" and "Stop test" or "Test: full party" end,
 			function() TU:SetTest("party") end, "Shows a fake full party so you can place and size the frames." },
 		{ function() return TU.testMode == "raid" and "Stop test" or "Test: full raid" end,
 			function() TU:SetTest("raid") end, "Shows a fake 40-person raid (8 groups) so you can place and size the frames." },
+		{ function() return TU.testMode == "boss" and "Stop test" or "Test: bosses" end,
+			function() TU:SetTest("boss") end, "Shows 5 fake boss frames so you can place them." },
 	})
+
+	p:Header("Boss frames")
+	p:Check("Use TitanUnits boss frames (boss fights in dungeons and raids)", Get("bossEnabled"), Set("bossEnabled"),
+		"Same size and look as the group frames. Border: green = the boss is attacking you, red = it isn't.")
+	p:Check("Hide Blizzard's boss frames", Get("hideBlizzardBoss"), Set("hideBlizzardBoss"))
 
 	p:Header("Who shows")
 	p:Check("Show yourself in party frames", Get("showPlayer"), Set("showPlayer"))

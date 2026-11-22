@@ -2,7 +2,7 @@
 ## Title: TitanUI
 ## Notes: One settings window for every Titan addon: pick an addon (and page) on the left, change its settings on the right.
 ## Author: Adam Rogers
-## Version: 1.3.3
+## Version: 1.3.4
 ## SavedVariables: TitanUIDB
 ## OptionalDeps: TitanBars, TitanFrames, TitanTools, TitanQuests, TitanMap, TitanMeter, TitanChat, TitanBags, TitanCraft, TitanUnits, TitanGear
 ## IconTexture: Interface\Icons\INV_Misc_Gear_01

@@ -63,13 +63,26 @@ function TB:PanelPlace(info, f)
 	f:ClearAllPoints()
 	if info.key == "micro" then
 		f:SetPoint("RIGHT", panel, "RIGHT", -6 / scale, 0)
-	else
-		local micro = _G.MicroMenuContainer
-		if micro and micro:IsShown() then
-			f:SetPoint("RIGHT", micro, "LEFT", -10 / scale, 0)
-		else
-			f:SetPoint("RIGHT", panel, "RIGHT", -6 / scale, 0)
+		-- The bags sit left of the menu buttons, so re-place them now the buttons' size is known.
+		if not self.placingBags then
+			for _, other in ipairs(self.EXTRAS) do
+				if other.key == "bags" then
+					self.placingBags = true
+					self:ApplyExtra(other)
+					self.placingBags = false
+				end
+			end
 		end
+	else
+		-- Anchor the bags to the panel, never to the menu buttons: Edit Mode anchors the
+		-- menu buttons to the bags, and anchoring both ways is a loop the game refuses.
+		local gap = 6
+		local micro = _G.MicroMenuContainer
+		if micro and micro:IsShown() and micro:GetWidth() then
+			local mw = micro:GetWidth() * micro:GetEffectiveScale() / panel:GetEffectiveScale()
+			gap = 6 + mw + 10
+		end
+		f:SetPoint("RIGHT", panel, "RIGHT", -gap * panel:GetEffectiveScale() / f:GetEffectiveScale(), 0)
 	end
 end
 

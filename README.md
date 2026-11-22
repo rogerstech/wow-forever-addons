@@ -7,7 +7,7 @@ They were written against Blizzard's own Forever-branch UI source.
 |-------|--------------|---------|
 | **TitanUI** | One settings window for all of them: addons (and their pages) in a tree on the left, settings on the right. | `/tui` |
 | **TitanCraft** | A faster crafting window you can move. Sorts recipes that give a skill point to the top, crafts your next skill-up in one click, shows what you can make and what you're missing. | `/tcraft` |
-| **TitanUnits** | Modern player and target frames with an animated 3D face portrait, class badge, health/mana text, target level/elite tag, target cast bar, your threat on the target and its buffs/debuffs. Plus party and raid frames for tanking: health and mana, range fading, your target outlined, and a red border on anyone who has pulled a mob off you. | `/tunits` |
+| **TitanUnits** | Modern player and target frames with an animated 3D face portrait, boss frames, class badge, health/mana text, target level/elite tag, target cast bar, your threat on the target and its buffs/debuffs. Plus party and raid frames for tanking: health and mana, range fading, your target outlined, and a red border on anyone who has pulled a mob off you. | `/tunits` |
 | **TitanGear** | One-click gear sets (e.g. Tank and Ret): a small bar, keys, and `/tgear Tank` for macros. | `/tgear` |
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons; icons turn red out of range and strong blue when you're short on mana. Info panel along the top or bottom with coordinates, zone, clock, FPS/latency, gold, durability, bag space and XP, holding the bags and menu buttons. | `/tb` |
 | **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, an Open All mail button, and a paladin blessing helper (one button or key blesses the next person who needs it). | `/ttools` |
@@ -323,8 +323,11 @@ size, and the target options are in TitanUI > TitanUnits > Player & target. `/tu
 - Hides Blizzard's party and raid frames (untick in TitanUI to get them back).
 - `/tunits unlock` shows a green box (party frames) and a blue box (raid frames, a preview of all 8 groups);
   drag each where you want it. Raid frames only appear while you're in a raid.
-  **Test view:** `/tunits test party` or `/tunits test raid` (or the buttons in TitanUI) shows a fake full party or 40-person
-  raid, drawn exactly like the real frames, so you can place and size them. `/tunits test off`, locking, or combat ends it. `/tunits solo` shows your own frame while solo (to set them up).
+  **Boss frames:** five frames for dungeon and raid bosses (same size and look as the group frames, red bars),
+  with a **green border while the boss is attacking you and red while it isn't**. Their own orange move box when unlocked.
+  Blizzard's boss frames are hidden (made invisible and unclickable); untick in TitanUI to get them back.
+  **Test view:** `/tunits test party`, `/tunits test raid` or `/tunits test boss` (or the buttons in TitanUI) shows a fake full party, 40-person
+  raid or 5 boss frames, drawn exactly like the real frames, so you can place and size them. `/tunits test off`, locking, or combat ends it. `/tunits solo` shows your own frame while solo (to set them up).
   Everything else is in TitanUI. Size and layout changes made in combat wait until combat ends.
 
 ## TitanGear
