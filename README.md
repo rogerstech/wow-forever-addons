@@ -327,7 +327,7 @@ size, and the target options are in TitanUI > TitanUnits > Player & target. `/tu
   with a **green border while the boss is attacking you and red while it isn't**. Their own orange move box when unlocked.
   Blizzard's boss frames are hidden (made invisible and unclickable); untick in TitanUI to get them back.
   **Test view:** `/tunits test party`, `/tunits test raid` or `/tunits test boss` (or the buttons in TitanUI) shows a fake full party, 40-person
-  raid or 5 boss frames, drawn exactly like the real frames, so you can place and size them. `/tunits test off`, locking, or combat ends it. `/tunits solo` shows your own frame while solo (to set them up).
+  raid (both with the 5 test bosses too) or just the 5 boss frames, drawn exactly like the real frames, so you can place and size them. `/tunits test off`, locking, or combat ends it. `/tunits solo` shows your own frame while solo (to set them up).
   Everything else is in TitanUI. Size and layout changes made in combat wait until combat ends.
 
 ## TitanGear

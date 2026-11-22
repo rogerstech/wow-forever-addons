@@ -20,9 +20,9 @@ local function Build(p, TU)
 	})
 	p:Buttons({
 		{ function() return TU.testMode == "party" and "Stop test" or "Test: full party" end,
-			function() TU:SetTest("party") end, "Shows a fake full party so you can place and size the frames." },
+			function() TU:SetTest("party") end, "Shows a fake full party (plus 5 test bosses if boss frames are on) so you can place and size the frames." },
 		{ function() return TU.testMode == "raid" and "Stop test" or "Test: full raid" end,
-			function() TU:SetTest("raid") end, "Shows a fake 40-person raid (8 groups) so you can place and size the frames." },
+			function() TU:SetTest("raid") end, "Shows a fake 40-person raid (8 groups, plus 5 test bosses if boss frames are on) so you can place and size the frames." },
 		{ function() return TU.testMode == "boss" and "Stop test" or "Test: bosses" end,
 			function() TU:SetTest("boss") end, "Shows 5 fake boss frames so you can place them." },
 	})

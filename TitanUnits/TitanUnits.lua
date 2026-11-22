@@ -591,8 +591,10 @@ local FAKE_CLASSES = { "WARRIOR", "PRIEST", "MAGE", "ROGUE", "HUNTER", "DRUID", 
 local FAKE_NAMES = { "Thrall", "Jaina", "Uther", "Valeera", "Rexxar", "Malfurion", "Gul'dan", "Drekthar",
 	"Tirion", "Sylvanas", "Cairne", "Vol'jin", "Saurfang", "Garona", "Zul'jin", "Rokhan", "Nazgrel", "Eitrigg" }
 
-local function FakeButton(i)
-	local b = fakes[i]
+local bossFakes = {}
+local function FakeButton(i, pool)
+	pool = pool or fakes
+	local b = pool[i]
 	if b then return b end
 	b = CreateFrame("Button", nil, UIParent)
 	TitanUnits_ButtonOnLoad(b)
@@ -600,7 +602,7 @@ local function FakeButton(i)
 	b:SetScript("OnEnter", nil)
 	b:EnableMouse(false)
 	b:SetFrameStrata("MEDIUM")
-	fakes[i] = b
+	pool[i] = b
 	return b
 end
 
@@ -652,32 +654,46 @@ local function FillFake(b, i, boss)
 	b.v:SetAlpha(i == 5 and db.rangeAlpha or 1)
 end
 
+-- Party and raid tests also show the 5 test bosses (when boss frames are on), so you can
+-- arrange everything together. "boss" shows only the bosses.
 function TU:ShowTest(mode)
 	self.testMode = mode
 	for _, b in ipairs(fakes) do b:Hide() end
+	for _, b in ipairs(bossFakes) do b:Hide() end
 	if not mode then return end
 	local db = self.db
 	local w, h, gap = math.floor(db.width), math.floor(db.height), math.floor(db.spacing)
-	local home = (mode == "raid" and raidAnchor) or (mode == "boss" and bossAnchor) or anchor
-	local count = mode == "raid" and 40 or 5
-	for i = 1, count do
-		local b = FakeButton(i)
+	local function Prep(b, home)
 		b:SetParent(home)
 		b:SetSize(w, h)
 		self:StyleButton(b)
 		b:ClearAllPoints()
-		if mode == "boss" then
-			b:SetPoint("TOPLEFT", home, "TOPLEFT", 0, -(i - 1) * (h + gap + 4))
-		elseif mode == "raid" then
-			local col, row = math.floor((i - 1) / 5), (i - 1) % 5
-			b:SetPoint("TOPLEFT", home, "TOPLEFT", col * (w + gap), -row * (h + gap))
-		elseif db.grow == "right" then
-			b:SetPoint("TOPLEFT", home, "TOPLEFT", (i - 1) * (w + gap), 0)
-		else
-			b:SetPoint("TOPLEFT", home, "TOPLEFT", 0, -(i - 1) * (h + gap))
+	end
+	if mode ~= "boss" then
+		local home = mode == "raid" and raidAnchor or anchor
+		for i = 1, (mode == "raid" and 40 or 5) do
+			local b = FakeButton(i)
+			Prep(b, home)
+			if mode == "raid" then
+				local col, row = math.floor((i - 1) / 5), (i - 1) % 5
+				b:SetPoint("TOPLEFT", home, "TOPLEFT", col * (w + gap), -row * (h + gap))
+			elseif db.grow == "right" then
+				b:SetPoint("TOPLEFT", home, "TOPLEFT", (i - 1) * (w + gap), 0)
+			else
+				b:SetPoint("TOPLEFT", home, "TOPLEFT", 0, -(i - 1) * (h + gap))
+			end
+			FillFake(b, i, false)
+			b:Show()
 		end
-		FillFake(b, i, mode == "boss")
-		b:Show()
+	end
+	if mode == "boss" or db.bossEnabled then
+		for i = 1, MAX_BOSSES do
+			local b = FakeButton(i, bossFakes)
+			Prep(b, bossAnchor)
+			b:SetPoint("TOPLEFT", bossAnchor, "TOPLEFT", 0, -(i - 1) * (h + gap + 4))
+			FillFake(b, i, true)
+			b:Show()
+		end
 	end
 end
 
@@ -688,10 +704,13 @@ function TU:SetTest(mode)
 	self:ShowTest(mode)
 	if mode then
 		if self.db.locked then self:SetLocked(false) end
-		local what = mode == "boss" and "set of 5 boss frames" or ("full " .. mode)
-		local box = mode == "raid" and "blue" or mode == "boss" and "orange" or "green"
-		self:Print(("test view: a fake %s. Drag the %s box to place it; /tunits test off (or lock) when done.")
-			:format(what, box))
+		if mode == "boss" then
+			self:Print("test view: 5 fake boss frames. Drag the orange box to place them; /tunits test off (or lock) when done.")
+		else
+			self:Print(("test view: a fake full %s%s. Drag the %s box%s to place them; /tunits test off (or lock) when done.")
+				:format(mode, self.db.bossEnabled and " plus 5 test bosses" or "", mode == "raid" and "blue" or "green",
+					self.db.bossEnabled and " and the orange boss box" or ""))
+		end
 	end
 end
 
