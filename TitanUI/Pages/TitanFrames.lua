@@ -75,7 +75,7 @@ end
 
 UI:Register({
 	name = "TitanFrames", global = "TitanFrames",
-	summary = "Move and resize minimap, party, raid and XP bars; viewport; square minimap.",
+	summary = "Move and resize minimap and XP bars; viewport; square minimap.",
 	ready = function(ns) return ns.ready and TitanFramesDB ~= nil end,
 	pages = {
 		{ key = "frames", label = "Frames", build = Frames },
