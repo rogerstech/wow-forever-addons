@@ -1,11 +1,12 @@
 # WoW Forever Addons
 
-Nine addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Ten addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
 |-------|--------------|---------|
 | **TitanUI** | One settings window for all of them: addons (and their pages) in a tree on the left, settings on the right. | `/tui` |
+| **TitanCraft** | A faster crafting window you can move. Sorts recipes that give a skill point to the top, crafts your next skill-up in one click, shows what you can make and what you're missing. | `/tcraft` |
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. Info panel along the top or bottom with coordinates, zone, clock, FPS/latency, gold, durability, bag space and XP, holding the bags and menu buttons. | `/tb` |
 | **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. Viewport (shrink the game world to leave black space for your UI), an optional square, resizable minimap, and hiding the XP / reputation bars. | `/tf` |
@@ -25,7 +26,7 @@ Each addon works on its own, so install only the ones you want.
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter`, `TitanChat`, `TitanBags` and `TitanUI` folders into
+2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter`, `TitanChat`, `TitanBags`, `TitanCraft` and `TitanUI` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
@@ -280,6 +281,28 @@ One window for every Titan addon's settings, so you don't have to remember `/tb`
 - Addons that aren't installed or are turned off simply don't appear in the tree.
 - TitanBars pages can't be changed in combat (Blizzard locks action bars then).
 - Each addon's own command still opens its old window, if you prefer it.
+
+## TitanCraft
+
+Open a profession as usual (spellbook, keybind or the profession button) and TitanCraft's window
+appears instead of Blizzard's.
+
+- **Move it:** drag the title bar. Drag the bottom-right corner to make it taller or shorter.
+- **Recipe colours** are your chance of a skill point: orange always, yellow usually, green sometimes,
+  grey never. `+2` next to a recipe means it gives two points. `[5]` is how many you can make now.
+- **Sort** (button above the list): *Skill-ups first* (default: orange, then yellow, green, grey;
+  recipes you have materials for come first within each colour), *Can make now first*, *Name*, *Category*.
+- **Have materials** and **Hide grey** filters, plus a search box.
+- **Craft next skill-up** (top right): makes one of the recipe most likely to give you a point that you
+  have materials for. Click it again after each craft; it re-picks as recipes change colour.
+- Right side: reagents with have / need (green = enough, red = short), required tools (anvil, forge...)
+  and cooldowns. Create 1 or a number, or **Create all**. Double-click a recipe to make one.
+  Shift-click a recipe or reagent to link it in chat.
+- Your other crafting professions are icons at the top left: click to switch.
+- **Blizzard window** (title bar) switches to Blizzard's window until you close the profession,
+  for specializations or anything TitanCraft doesn't show. Other players' linked professions and
+  guild lists always use Blizzard's window.
+- `/tcraft blizzard on` goes back to Blizzard's window for good (`off` to return). Settings are in TitanUI.
 
 ## Notes
 
