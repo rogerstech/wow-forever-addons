@@ -2,7 +2,7 @@
 ## Title: TitanUnits
 ## Notes: Modern player and target frames with animated 3D portraits, plus party and raid frames for tanking: health, mana, range, your target, and a red border on anyone who has pulled a mob off you.
 ## Author: Adam Rogers
-## Version: 1.2.0
+## Version: 1.2.1
 ## SavedVariables: TitanUnitsDB
 ## IconTexture: Interface\Icons\Spell_Holy_SealOfProtection
 

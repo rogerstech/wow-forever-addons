@@ -88,7 +88,24 @@ local function Edge(parent, layer, size)
 	return t
 end
 
+-- Right-click needs RegisterForClicks, which Blizzard doesn't allow inside the secure
+-- setup snippet, and which can't be called on a secure button in combat. Buttons made
+-- mid-fight (someone joins) get it as soon as combat ends.
+local needClicks = {}
+local function RegisterClicks(b)
+	if InCombatLockdown() then
+		needClicks[b] = true
+	else
+		b:RegisterForClicks("AnyUp")
+		needClicks[b] = nil
+	end
+end
+function TU:FlushClicks()
+	for b in pairs(needClicks) do RegisterClicks(b) end
+end
+
 function TitanUnits_ButtonOnLoad(b)
+	RegisterClicks(b)
 	-- Everything visible sits on a plain child frame, so fading it for range never
 	-- touches the secure button.
 	local v = CreateFrame("Frame", nil, b)
@@ -318,7 +335,6 @@ local function ConfigSnippet(w, h)
 		self:SetHeight(%d)
 		self:SetAttribute("*type1", "target")
 		self:SetAttribute("*type2", "togglemenu")
-		self:RegisterForClicks("AnyUp")
 	]]):format(w, h)
 end
 
@@ -550,6 +566,7 @@ ev:SetScript("OnEvent", function(_, event, a1)
 		TU:ForUnit(nil, TU.UpdateTarget)
 		TU:ForUnit(nil, TU.UpdateAggro)
 	elseif event == "PLAYER_REGEN_ENABLED" then
+		TU:FlushClicks()
 		if pendingLayout then TU:ApplyLayout() end
 	else
 		C_Timer.After(0.2, function() TU:UpdateAll() end)
