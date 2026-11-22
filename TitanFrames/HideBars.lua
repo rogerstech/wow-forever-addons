@@ -1,7 +1,8 @@
 -- TitanFrames: hide the XP bar and the second status bar (reputation / honor).
--- Forever's Edit Mode only offers a size for these, so TitanFrames moves them under a
--- hidden frame. Blizzard sometimes moves them back into its bottom-of-screen layout,
--- so they're hidden again whenever that happens.
+-- Forever's Edit Mode only offers a size for these. TitanFrames leaves them where Blizzard
+-- keeps them (moving them under another frame broke Blizzard's own code, which expects
+-- their parent to be its status-bar manager) and simply hides them again every time
+-- Blizzard shows them. Our code only ever runs after Blizzard's, never inside it.
 local ADDON, TF = ...
 
 local BARS = {
@@ -9,34 +10,44 @@ local BARS = {
 	{ key = "xp2", name = "SecondaryStatusTrackingBarContainer", label = "Hide the reputation / honor bar" },
 }
 
-local hider = CreateFrame("Frame")
-hider:Hide()
-local origParent = {}
-local setting = false
+local hooked = {}
+local hiddenByUs = {}
 local waiting = false
 
 function TF:BarHidden(key)
 	return self:Cfg("hide")[key] == true
 end
 
+local function Enforce(f, key)
+	if not TF:BarHidden(key) or not f:IsShown() then return end
+	if f:IsProtected() and InCombatLockdown() then
+		waiting = true
+		return
+	end
+	f:Hide()
+	hiddenByUs[f] = true
+end
+
+local function Hook(f, key)
+	if hooked[f] then return end
+	hooked[f] = true
+	local function After() Enforce(f, key) end
+	hooksecurefunc(f, "Show", After)
+	hooksecurefunc(f, "SetShown", After)
+	if f.UpdateShownState then hooksecurefunc(f, "UpdateShownState", After) end
+end
+
 function TF:ApplyHiddenBars()
 	for _, b in ipairs(BARS) do
 		local f = _G[b.name]
 		if f then
-			if f:IsProtected() and InCombatLockdown() then
-				waiting = true
-			else
-				setting = true
-				if self:BarHidden(b.key) then
-					if f:GetParent() ~= hider then
-						origParent[f] = f:GetParent()
-						f:SetParent(hider)
-					end
-				elseif f:GetParent() == hider then
-					f:SetParent(origParent[f] or UIParent)
-					origParent[f] = nil
-				end
-				setting = false
+			Hook(f, b.key)
+			if self:BarHidden(b.key) then
+				Enforce(f, b.key)
+			elseif hiddenByUs[f] then
+				hiddenByUs[f] = nil
+				-- Let Blizzard decide whether it should show (it hides it when there's nothing to track).
+				if f.UpdateShownState then pcall(f.UpdateShownState, f) else f:Show() end
 			end
 		end
 	end
@@ -83,19 +94,7 @@ ev:RegisterEvent("PLAYER_LOGIN")
 ev:RegisterEvent("PLAYER_ENTERING_WORLD")
 ev:RegisterEvent("PLAYER_REGEN_ENABLED")
 ev:SetScript("OnEvent", function(_, event)
-	if event == "PLAYER_LOGIN" then
-		for _, b in ipairs(BARS) do
-			local f = _G[b.name]
-			if f then
-				hooksecurefunc(f, "SetParent", function()
-					if setting or not TF:BarHidden(b.key) then return end
-					-- Wait a frame so Blizzard's own layout call finishes first.
-					C_Timer.After(0, function() TF:ApplyHiddenBars() end)
-				end)
-			end
-		end
-		TF:ApplyHiddenBars()
-	elseif event == "PLAYER_REGEN_ENABLED" then
+	if event == "PLAYER_REGEN_ENABLED" then
 		if waiting then
 			waiting = false
 			TF:ApplyHiddenBars()
