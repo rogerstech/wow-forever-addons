@@ -71,6 +71,8 @@ local function Solo(p, TU)
 	p:Check("Show the target's buffs and debuffs", Get("auras"), Set("auras"))
 	p:Check("Only my debuffs", Get("myDebuffsOnly"), Set("myDebuffsOnly"))
 	p:Slider("Buff / debuff icon size", 14, 40, 1, Get("auraSize"), Set("auraSize"))
+	p:Check("Target cast bar (orange = can be interrupted, grey + shield = can't)", Get("castbar"), Set("castbar"))
+	p:Slider("Cast bar height", 10, 32, 1, Get("castHeight"), Set("castHeight"))
 	p:Note("Left-click a frame to target, right-click for the usual menu. Size and position changes made in combat apply when it ends.")
 end
 

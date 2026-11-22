@@ -24,6 +24,8 @@ local SOLO_DEFAULTS = {
 	auras = true,
 	myDebuffsOnly = false,
 	auraSize = 22,
+	castbar = true,
+	castHeight = 18,
 	pos = {},             -- player / target: { x, y } top-left in screen pixels
 }
 
@@ -162,9 +164,34 @@ local function Create(unit)
 
 	f.edge = Edges(v, 2)           -- threat colour on the target frame
 	f.edge:Color(0, 0, 0, 0)
+	f.cast = false
 	if mirror then
 		f.threat = v:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 		f.auras = {}
+		-- Cast bar under the target frame.
+		local cb = CreateFrame("StatusBar", nil, f.v)
+		cb:SetStatusBarTexture(TEX)
+		local cbg = cb:CreateTexture(nil, "BACKGROUND")
+		cbg:SetAllPoints()
+		cbg:SetColorTexture(0.05, 0.05, 0.07, 0.85)
+		cb.edge = Edges(cb, 1)
+		cb.edge:Color(0, 0, 0, 1)
+		cb.icon = cb:CreateTexture(nil, "ARTWORK")
+		cb.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+		cb.text = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		cb.text:SetPoint("LEFT", 6, 0)
+		cb.text:SetPoint("RIGHT", -40, 0)
+		cb.text:SetJustifyH("LEFT")
+		cb.text:SetWordWrap(false)
+		cb.time = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		cb.time:SetPoint("RIGHT", -5, 0)
+		cb.shield = cb:CreateTexture(nil, "OVERLAY")
+		cb.shield:SetSize(14, 14)
+		cb.shield:SetTexture("Interface\\CastingBar\\UI-CastingBar-Small-Shield")
+		cb.shield:SetAlpha(0)
+		cb.token, cb.startT, cb.endT, cb.channel = 0, false, 0, false
+		cb:Hide()
+		f.cast = cb
 	end
 
 	f:HookScript("OnEnter", function(self)
@@ -242,6 +269,18 @@ local function Layout(f)
 		f:SetPoint("TOPRIGHT", UIParent, "CENTER", -60, -170)
 	end
 	f.mover:SetShown(not c.locked)
+	if f.cast then
+		local ch = c.castHeight
+		f.cast:ClearAllPoints()
+		f.cast:SetHeight(ch)
+		f.cast:SetPoint("TOPLEFT", f, "BOTTOMLEFT", ch + 2, -3)
+		f.cast:SetPoint("TOPRIGHT", f, "BOTTOMRIGHT", 0, -3)
+		f.cast.icon:ClearAllPoints()
+		f.cast.icon:SetSize(ch, ch)
+		f.cast.icon:SetPoint("RIGHT", f.cast, "LEFT", -2, 0)
+		f.cast.shield:ClearAllPoints()
+		f.cast.shield:SetPoint("CENTER", f.cast.icon, "CENTER")
+	end
 end
 
 ---------------------------------------------------------------------------
@@ -451,7 +490,8 @@ function TU:SoloAuras(f)
 			local a = AuraButton(f, n)
 			a:SetSize(size, size)
 			a:ClearAllPoints()
-			a:SetPoint("TOPLEFT", f, "BOTTOMLEFT", (col - 1) * (size + 3), -4 - row * (size + 14))
+			local down = c.castbar and (c.castHeight + 6) or 0   -- leave room for the cast bar
+			a:SetPoint("TOPLEFT", f, "BOTTOMLEFT", (col - 1) * (size + 3), -4 - down - row * (size + 14))
 			a.icon:SetTexture(aura.icon)
 			local stacks = aura.applications
 			if not Secret(stacks) and stacks ~= nil and stacks > 1 then a.count:SetText(stacks) else a.count:SetText("") end
@@ -469,9 +509,94 @@ function TU:SoloAuras(f)
 	for i = n + 1, #f.auras do f.auras[i]:Hide() end
 end
 
+---------------------------------------------------------------------------
+-- Target cast bar.
+-- Best case the cast's start/end times are readable and the bar fills smoothly. If the game
+-- hides them, it tries the game's own timer; if that's refused too, the bar shows the spell
+-- name and icon (full) so you still see what's coming.
+local ORANGE, GREY = CreateColor(1, 0.7, 0.1, 1), CreateColor(0.6, 0.6, 0.65, 1)
+local SHIELD_ON = 1
+
+local function CastOnUpdate(cb)
+	if not cb.startT then return end
+	local now = GetTime()
+	local total = cb.endT - cb.startT
+	if total <= 0 then return end
+	local p = (now - cb.startT) / total
+	if p >= 1 then cb:Hide() return end
+	cb:SetValue(cb.channel and (1 - p) or p)
+	cb.time:SetFormattedText("%.1f", cb.endT - now)
+end
+
+function TU:SoloCast(f, event)
+	local cb = f and f.cast
+	if not cb then return end
+	local c = self:SoloCfg()
+	if not c.castbar then cb:Hide() return end
+	if event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED" then
+		cb:SetScript("OnUpdate", nil)
+		cb.startT = false
+		cb:SetMinMaxValues(0, 1)
+		cb:SetValue(1)
+		cb:GetStatusBarTexture():SetVertexColor(0.9, 0.15, 0.1)
+		cb.text:SetText(event == "UNIT_SPELLCAST_INTERRUPTED" and "Interrupted" or "Failed")
+		cb.time:SetText("")
+		cb.token = cb.token + 1
+		local token = cb.token
+		C_Timer.After(0.6, function() if cb.token == token then cb:Hide() end end)
+		return
+	end
+	local channel = false
+	local name, text, tex, startMs, endMs, _, _, notInt = UnitCastingInfo("target")
+	if not Secret(name) and name == nil then
+		name, text, tex, startMs, endMs, _, notInt = UnitChannelInfo("target")
+		channel = true
+	end
+	if not Secret(name) and name == nil then
+		cb:SetScript("OnUpdate", nil)
+		cb.startT = false
+		cb:Hide()
+		return
+	end
+	cb.token = cb.token + 1
+	cb.channel = channel
+	cb.text:SetText(text or name)
+	cb.icon:SetTexture(tex)
+	-- Orange = can be interrupted, grey with a shield = can't.
+	local bar = cb:GetStatusBarTexture()
+	if Secret(notInt) then
+		if bar.SetVertexColorFromBoolean then bar:SetVertexColorFromBoolean(notInt, GREY, ORANGE) end
+		AlphaFromBoolean(cb.shield, notInt, SHIELD_ON, 0)
+	elseif notInt then
+		bar:SetVertexColor(GREY:GetRGB()); cb.shield:SetAlpha(SHIELD_ON)
+	else
+		bar:SetVertexColor(ORANGE:GetRGB()); cb.shield:SetAlpha(0)
+	end
+	cb:SetMinMaxValues(0, 1)
+	cb.time:SetText("")
+	if not Secret(startMs) and not Secret(endMs) and startMs and endMs then
+		cb.startT, cb.endT = startMs / 1000, endMs / 1000
+		cb:SetScript("OnUpdate", CastOnUpdate)
+		CastOnUpdate(cb)
+	else
+		cb.startT = false
+		cb:SetScript("OnUpdate", nil)
+		local ok = false
+		local getDur = channel and UnitChannelDuration or UnitCastingDuration
+		if getDur and cb.SetTimerDuration then
+			local dir = Enum and Enum.StatusBarTimerDirection
+			ok = pcall(function()
+				cb:SetTimerDuration(getDur("target"), nil, dir and (channel and dir.RemainingTime or dir.ElapsedTime) or nil)
+			end)
+		end
+		if not ok then cb:SetValue(1) end
+	end
+	cb:Show()
+end
+
 function TU:SoloUpdate(f, what)
 	if not f or not UnitExists(f.unit) then return end
-	local list = what and { what } or { "SoloPortrait", "SoloHealth", "SoloPower", "SoloInfo", "SoloThreat", "SoloAuras" }
+	local list = what and { what } or { "SoloPortrait", "SoloHealth", "SoloPower", "SoloInfo", "SoloThreat", "SoloAuras", "SoloCast" }
 	for _, m in ipairs(list) do
 		local ok, err = pcall(self[m], self, f)
 		if not ok and not self.soloWarned then
@@ -547,6 +672,11 @@ function TU:SetupSolo()
 		UNIT_PORTRAIT_UPDATE = "SoloPortrait", UNIT_MODEL_CHANGED = "SoloPortrait",
 		UNIT_THREAT_LIST_UPDATE = "SoloThreat", UNIT_THREAT_SITUATION_UPDATE = "SoloThreat",
 		UNIT_AURA = "SoloAuras",
+		UNIT_SPELLCAST_START = "SoloCast", UNIT_SPELLCAST_STOP = "SoloCast", UNIT_SPELLCAST_DELAYED = "SoloCast",
+		UNIT_SPELLCAST_FAILED = "SoloCast", UNIT_SPELLCAST_INTERRUPTED = "SoloCast",
+		UNIT_SPELLCAST_CHANNEL_START = "SoloCast", UNIT_SPELLCAST_CHANNEL_STOP = "SoloCast",
+		UNIT_SPELLCAST_CHANNEL_UPDATE = "SoloCast",
+		UNIT_SPELLCAST_INTERRUPTIBLE = "SoloCast", UNIT_SPELLCAST_NOT_INTERRUPTIBLE = "SoloCast",
 	}
 	for e in pairs(UNIT) do pcall(ev.RegisterUnitEvent or ev.RegisterEvent, ev, e, "player", "target") end
 	for _, e in ipairs({ "PLAYER_TARGET_CHANGED", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
@@ -555,7 +685,15 @@ function TU:SetupSolo()
 	end
 	ev:SetScript("OnEvent", function(_, event, unit)
 		local m = UNIT[event]
-		if m then
+		if m == "SoloCast" then
+			if unit == "target" then
+				local ok, err = pcall(TU.SoloCast, TU, frames.target, event)
+				if not ok and not TU.soloWarned then
+					TU.soloWarned = true
+					TU:Print("cast bar error (please send this): " .. tostring(err))
+				end
+			end
+		elseif m then
 			if frames[unit] then TU:SoloUpdate(frames[unit], m) end
 			if m == "SoloThreat" or (m == "SoloHealth" and unit ~= "target") then
 				TU:SoloUpdate(frames.target, "SoloThreat")

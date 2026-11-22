@@ -7,7 +7,7 @@ They were written against Blizzard's own Forever-branch UI source.
 |-------|--------------|---------|
 | **TitanUI** | One settings window for all of them: addons (and their pages) in a tree on the left, settings on the right. | `/tui` |
 | **TitanCraft** | A faster crafting window you can move. Sorts recipes that give a skill point to the top, crafts your next skill-up in one click, shows what you can make and what you're missing. | `/tcraft` |
-| **TitanUnits** | Modern player and target frames with an animated 3D face portrait, class badge, health/mana text, target level/elite tag, your threat on the target and its buffs/debuffs. Plus party and raid frames for tanking: health and mana, range fading, your target outlined, and a red border on anyone who has pulled a mob off you. | `/tunits` |
+| **TitanUnits** | Modern player and target frames with an animated 3D face portrait, class badge, health/mana text, target level/elite tag, target cast bar, your threat on the target and its buffs/debuffs. Plus party and raid frames for tanking: health and mana, range fading, your target outlined, and a red border on anyone who has pulled a mob off you. | `/tunits` |
 | **TitanGear** | One-click gear sets (e.g. Tank and Ret): a small bar, keys, and `/tgear Tank` for macros. | `/tgear` |
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons; icons turn red out of range and strong blue when you're short on mana. Info panel along the top or bottom with coordinates, zone, clock, FPS/latency, gold, durability, bag space and XP, holding the bags and menu buttons. | `/tb` |
 | **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, an Open All mail button, and a paladin blessing helper (one button or key blesses the next person who needs it). | `/ttools` |
@@ -311,7 +311,7 @@ appears instead of Blizzard's.
 **Player and target frames.** A dark, flat frame with an animated 3D portrait of the face (yours and your
 target's), a class badge, health as `15.2k / 18k` and `84%`, and mana/rage/energy. The player frame shows a
 combat or resting icon and a crown when you lead the group. The target frame adds its level (coloured by
-difficulty, `??` for skull), an Elite / Rare / Boss tag, its buffs and debuffs underneath, and your threat:
+difficulty, `??` for skull), an Elite / Rare / Boss tag, a **cast bar** (orange = can be interrupted, grey with a shield = can't; it fills as the cast goes, or shows the spell name on a full bar if the game hides the timing), its buffs and debuffs underneath, and your threat:
 **green border = it's attacking you, red = it isn't**, with your threat % above. If the target isn't loaded
 near you, the portrait falls back to the flat picture. Portrait style (3D face, flat picture, class icon),
 size, and the target options are in TitanUI > TitanUnits > Player & target. `/tunits unlock` to drag them.
