@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: TitanBags
+## Notes: All your bags in one movable window, with a sort button and sorted views. Hides Blizzard's bag windows.
+## Author: Adam Rogers
+## Version: 1.0.0
+## SavedVariables: TitanBagsDB
+## IconTexture: Interface\Icons\INV_Misc_Bag_08
+
+Core.lua
+Bags.lua

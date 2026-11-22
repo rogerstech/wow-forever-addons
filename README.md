@@ -1,6 +1,6 @@
 # WoW Forever Addons
 
-Seven addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Eight addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
@@ -12,6 +12,7 @@ They were written against Blizzard's own Forever-branch UI source.
 | **TitanQuests** | A cleaner quest tracker that replaces Blizzard's. Quests grouped by zone, fold quests or zones away, quest item buttons, and one button (or key) to minimize it. Minimizes itself in dungeons and raids. | `/tquests` |
 | **TitanMeter** | Damage meter (damage, DPS, healing, HPS, damage taken, absorbs, interrupts, dispels, deaths; this fight or overall, with a spell breakdown on hover) and a threat meter for your target, for you and your group. Uses the game's own combat numbers. | `/tmeter` |
 | **TitanMap** | A see-through map of your zone that sits on your screen while you play: your arrow, quest markers and shaded quest areas. Clicks go straight through it. Toggle with a key. | `/tmap` |
+| **TitanBags** | All your bags in one window that you can drag anywhere. Hides Blizzard's bag windows. Sort button (tidies your bags), plus sorted views by quality, type, name or item level that don't move anything. Search box, free slots, gold, keyring. | `/tbags` |
 
 ## Download
 
@@ -23,7 +24,7 @@ Each addon works on its own, so install only the ones you want.
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter` and `TitanChat` folders into
+2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter`, `TitanChat` and `TitanBags` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
@@ -241,6 +242,28 @@ In combat the game hides exact numbers from addons ("secret values"). They can s
 what TitanMeter does, but they can't be sorted by an addon. The damage list arrives already sorted by
 the game. The threat list is sorted when the game allows it; if it ever doesn't, it falls back to group
 order (the bars and percentages are still right).
+
+## TitanBags
+
+Press **B** (or click the backpack) as usual: your bags open in one TitanBags window instead of
+Blizzard's. Blizzard's bag code still runs underneath, so bag keys, vendors, mail and the bank still
+open and close your bags as normal. Items behave exactly like Blizzard's bags: right-click to use (works
+in combat), drag, Shift-click to split, sell to vendors, tooltips.
+
+- **Move it:** drag the title bar. It remembers where you put it and grows up and to the left from that
+  corner. Right-click the title bar > Lock position to stop accidental drags.
+- **Sort button** (broom icon, top right): tidies your bags for real, the same as Blizzard's sort.
+  Not in combat.
+- **Sorted views** (right-click the title bar > Show items by): bag order, quality, type, name or item
+  level. These only change how the window draws your items; nothing moves in your bags. Empty slots go at
+  the end. While your mouse is over the window, the order holds still so items don't jump under your
+  cursor; it re-sorts when you move away.
+- Search box filters your items. Bottom bar shows free slots (yellow at 4 or fewer, red when full) and gold.
+- Keyring shows in its own "Keys" section (right-click menu to turn off).
+
+Commands: `/tbags` (open/close), `/tbags sort`, `/tbags view bag|quality|type|name|ilvl`,
+`/tbags columns N`, `/tbags scale N`, `/tbags lock` / `unlock`, `/tbags keys on|off`,
+`/tbags reset` (window back to the bottom-right), `/tbags blizzard show` (go back to Blizzard's bags).
 
 ## Notes
 
