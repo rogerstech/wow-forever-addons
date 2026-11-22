@@ -34,7 +34,7 @@ local DEFAULTS = {
 local TEX = "Interface\\TargetingFrame\\UI-StatusBar"
 local AGGRO = CreateColor(1, 0.15, 0.1, 1)
 local buttons = {}
-local anchor, party, raid, mover
+local anchor, raidAnchor, party, raid, mover, raidMover
 local pendingLayout = false
 local curve
 
@@ -348,13 +348,18 @@ function TU:ApplyLayout()
 	local db = self.db
 	local w, h, gap = math.floor(db.width), math.floor(db.height), math.floor(db.spacing)
 
-	anchor:SetScale(db.scale)
-	anchor:ClearAllPoints()
-	if db.pos then
-		local s = anchor:GetEffectiveScale()
-		anchor:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", db.pos.x / s, db.pos.y / s)
-	else
-		anchor:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -260)
+	-- Party and raid frames each have their own spot. Until the raid frames are moved,
+	-- they start where the party frames are.
+	for _, a in ipairs({ { anchor, db.pos }, { raidAnchor, db.raidPos or db.pos } }) do
+		local fr, pos = a[1], a[2]
+		fr:SetScale(db.scale)
+		fr:ClearAllPoints()
+		if pos then
+			local s = fr:GetEffectiveScale()
+			fr:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", pos.x / s, pos.y / s)
+		else
+			fr:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 30, -260)
+		end
 	end
 
 	for _, hdr in ipairs({ party, raid }) do
@@ -395,8 +400,9 @@ function TU:ApplyLayout()
 end
 
 local function Header(name, isRaid)
-	local hdr = CreateFrame("Frame", name, anchor, "SecureGroupHeaderTemplate")
-	hdr:SetPoint("TOPLEFT", anchor, "TOPLEFT")
+	local home = isRaid and raidAnchor or anchor
+	local hdr = CreateFrame("Frame", name, home, "SecureGroupHeaderTemplate")
+	hdr:SetPoint("TOPLEFT", home, "TOPLEFT")
 	hdr:SetAttribute("template", "TitanUnitsButtonTemplate")
 	hdr:SetAttribute("templateType", "Button")
 	hdr:SetAttribute("sortMethod", "INDEX")
@@ -449,51 +455,80 @@ end
 
 ---------------------------------------------------------------------------
 -- Moving
-local function SavePos()
-	local s = mover:GetEffectiveScale()
-	TU.db.pos = { x = mover:GetLeft() * s, y = mover:GetTop() * s }
+-- While unlocked, each mover shows a preview of the frames it stands for: 5 party
+-- slots, and the raid layout (8 groups of 5), so you can see the real size.
+local function Preview(m, cols, rows)
+	local db = TU.db
+	local w, h, gap, sc = db.width, db.height, db.spacing, db.scale
+	m:SetSize((cols * w + (cols - 1) * gap) * sc, (rows * h + (rows - 1) * gap) * sc)
+	if type(m.cells) ~= "table" then m.cells = {} end
+	local n = 0
+	for c = 1, cols do
+		for r = 1, rows do
+			n = n + 1
+			local t = m.cells[n] or m:CreateTexture(nil, "ARTWORK")
+			m.cells[n] = t
+			t:ClearAllPoints()
+			t:SetSize(w * sc, h * sc)
+			t:SetPoint("TOPLEFT", (c - 1) * (w + gap) * sc, -(r - 1) * (h + gap) * sc)
+			t:SetColorTexture(1, 1, 1, 0.12)
+			t:Show()
+		end
+	end
+	for i = n + 1, #m.cells do m.cells[i]:Hide() end
+end
+
+local function SavePos(m)
+	local s = m:GetEffectiveScale()
+	local pos = { x = m:GetLeft() * s, y = m:GetTop() * s }
+	if m == raidMover then TU.db.raidPos = pos else TU.db.pos = pos end
 end
 
 function TU:PlaceMover()
 	if not mover then return end
 	local db = self.db
-	local n = db.grow == "right" and 5 or 1
-	mover:SetSize((db.width * n + db.spacing * (n - 1)) * db.scale, (db.height * (6 - n) + db.spacing * (5 - n)) * db.scale)
-	mover:ClearAllPoints()
-	mover:SetPoint("TOPLEFT", anchor, "TOPLEFT")
-	mover:SetShown(not db.locked)
+	if db.grow == "right" then Preview(mover, 5, 1) else Preview(mover, 1, 5) end
+	Preview(raidMover, 8, 5)
+	for _, a in ipairs({ { mover, anchor }, { raidMover, raidAnchor } }) do
+		a[1]:ClearAllPoints()
+		a[1]:SetPoint("TOPLEFT", a[2], "TOPLEFT")
+		a[1]:SetShown(not db.locked)
+	end
 end
 
 function TU:SetLocked(locked)
 	if not locked and InCombatLockdown() then return self:Print("can't move frames in combat.") end
 	self.db.locked = locked
 	self:PlaceMover()
-	if not locked then self:Print("drag the green box to move the group frames; lock them in /tui when done.") end
+	if not locked then
+		self:Print("drag the green box (party) and the blue box (raid, 8 groups) where you want them; lock them in /tui when done.")
+	end
 end
 
-local function CreateMover()
-	mover = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-	mover:SetFrameStrata("DIALOG")
-	mover:SetMovable(true)
-	mover:EnableMouse(true)
-	mover:RegisterForDrag("LeftButton")
-	mover:SetClampedToScreen(true)
-	mover:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
-	mover:SetBackdropColor(0.2, 0.8, 0.3, 0.35)
-	mover:SetBackdropBorderColor(0.4, 1, 0.5, 1)
-	local t = mover:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	t:SetPoint("CENTER")
-	t:SetText("Group frames\n|cffffffffdrag to move|r")
-	mover:SetScript("OnDragStart", function(self)
+local function CreateMover(label, r, g, b)
+	local m = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+	m:SetFrameStrata("DIALOG")
+	m:SetMovable(true)
+	m:EnableMouse(true)
+	m:RegisterForDrag("LeftButton")
+	m:SetClampedToScreen(true)
+	m:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+	m:SetBackdropColor(r, g, b, 0.25)
+	m:SetBackdropBorderColor(r, g, b, 1)
+	local t = m:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	t:SetPoint("BOTTOMLEFT", m, "TOPLEFT", 2, 3)
+	t:SetText(label)
+	m:SetScript("OnDragStart", function(self)
 		if InCombatLockdown() then return end
 		self:StartMoving()
 	end)
-	mover:SetScript("OnDragStop", function(self)
+	m:SetScript("OnDragStop", function(self)
 		self:StopMovingOrSizing()
-		SavePos()
+		SavePos(self)
 		TU:ApplyLayout()
 	end)
-	mover:Hide()
+	m:Hide()
+	return m
 end
 
 ---------------------------------------------------------------------------
@@ -512,7 +547,7 @@ SlashCmdList.TITANUNITS = function(msg)
 		TU:ApplyLayout()
 		TU:Print(TU.db.showSolo and "showing your own frame while solo (handy for setting up)." or "hidden while solo.")
 	elseif cmd == "reset" then
-		TU.db.pos = nil
+		TU.db.pos, TU.db.raidPos = nil, nil
 		TU:ApplyLayout()
 	else
 		TU:Print("/tunits unlock | lock - move the player, target and group frames")
@@ -541,7 +576,12 @@ ev:SetScript("OnEvent", function(_, event, a1)
 	elseif event == "PLAYER_LOGIN" then
 		anchor = CreateFrame("Frame", "TitanUnitsAnchor", UIParent)
 		anchor:SetSize(10, 10)
-		CreateMover()
+		raidAnchor = CreateFrame("Frame", "TitanUnitsRaidAnchor", UIParent)
+		raidAnchor:SetSize(10, 10)
+		mover = CreateMover("Party frames  |cffffffff(drag to move)|r", 0.2, 0.8, 0.3)
+		raidMover = CreateMover("Raid frames: 8 groups  |cffffffff(drag to move)|r", 0.25, 0.55, 1)
+		-- The party box is smaller: keep it on top so both can be grabbed when they overlap.
+		mover:SetFrameLevel(raidMover:GetFrameLevel() + 20)
 		party = Header("TitanUnitsParty", false)
 		raid = Header("TitanUnitsRaid", true)
 		TU.party, TU.raid = party, raid

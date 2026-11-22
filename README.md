@@ -324,7 +324,8 @@ size, and the target options are in TitanUI > TitanUnits > Player & target. `/tu
 - **White outline** on your current target. Out-of-range members fade.
 - Party is a column (or a row); in a raid, one column per group.
 - Hides Blizzard's party and raid frames (untick in TitanUI to get them back).
-- `/tunits unlock` to drag them, `/tunits solo` to show your own frame while solo (to set them up).
+- `/tunits unlock` shows a green box (party frames) and a blue box (raid frames, a preview of all 8 groups);
+  drag each where you want it. Raid frames only appear while you're in a raid. `/tunits solo` shows your own frame while solo (to set them up).
   Everything else is in TitanUI. Size and layout changes made in combat wait until combat ends.
 
 ## TitanGear

@@ -14,8 +14,9 @@ local function Build(p, TU)
 		if not v then UI:Print("if Blizzard's frames don't come back in the right spot, type /reload.") end
 	end)
 	p:Buttons({
-		{ function() return db.locked and "Unlock to move" or "Lock" end, function() TU:SetLocked(not db.locked) end },
-		{ "Reset position", function() db.pos = nil; TU:ApplyLayout() end },
+		{ function() return db.locked and "Unlock to move" or "Lock" end, function() TU:SetLocked(not db.locked) end,
+			"Unlocked: green box = party frames, blue box = raid frames (8 groups). Each moves on its own. Raid frames only appear in a raid." },
+		{ "Reset positions", function() db.pos, db.raidPos = nil, nil; TU:ApplyLayout() end },
 	})
 
 	p:Header("Who shows")
