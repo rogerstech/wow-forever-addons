@@ -1,10 +1,11 @@
 # WoW Forever Addons
 
-Eight addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Nine addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
 |-------|--------------|---------|
+| **TitanUI** | One settings window for all of them: addons (and their pages) in a tree on the left, settings on the right. | `/tui` |
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons. Info panel along the top or bottom with coordinates, zone, clock, FPS/latency, gold, durability, bag space and XP, holding the bags and menu buttons. | `/tb` |
 | **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, and an Open All mail button. | `/ttools` |
 | **TitanFrames** | Move and resize the minimap, party frames, raid frames and XP bar, and show map coordinates on the minimap. Viewport (shrink the game world to leave black space for your UI), an optional square, resizable minimap, and hiding the XP / reputation bars. | `/tf` |
@@ -24,7 +25,7 @@ Each addon works on its own, so install only the ones you want.
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter`, `TitanChat` and `TitanBags` folders into
+2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter`, `TitanChat`, `TitanBags` and `TitanUI` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
@@ -264,6 +265,21 @@ in combat), drag, Shift-click to split, sell to vendors, tooltips.
 Commands: `/tbags` (open/close), `/tbags sort`, `/tbags view bag|quality|type|name|ilvl`,
 `/tbags columns N`, `/tbags scale N`, `/tbags lock` / `unlock`, `/tbags keys on|off`,
 `/tbags reset` (window back to the bottom-right), `/tbags blizzard show` (go back to Blizzard's bags).
+
+## TitanUI
+
+One window for every Titan addon's settings, so you don't have to remember `/tb`, `/tf`, `/ttools`...
+
+- `/tui` (or `/titanui`) opens it. `/tui bars`, `/tui bags`, `/tui meter`... jumps straight to one addon.
+  You can also bind a key (Esc > Options > Keybindings > AddOns > TitanUI) or use Esc > Options > AddOns > TitanUI.
+- **Left:** a tree of your installed Titan addons. Addons with several pages (TitanBars: General, Bar 1-8,
+  Bags and menu, Info panel, Profiles; TitanFrames: Frames, Viewport, Square minimap, XP and rep bars;
+  TitanMeter: General, Damage meter, Threat meter) open up when you click them; click again to fold.
+- **Right:** that page's settings. Everything applies straight away. Mouse wheel over a slider nudges it one step.
+- **Overview** shows which Titan addons are on, turned off, or not installed.
+- Addons that aren't installed or are turned off simply don't appear in the tree.
+- TitanBars pages can't be changed in combat (Blizzard locks action bars then).
+- Each addon's own command still opens its old window, if you prefer it.
 
 ## Notes
 

@@ -1,0 +1,20 @@
+## Interface: 16001
+## Title: TitanUI
+## Notes: One settings window for every Titan addon: pick an addon (and page) on the left, change its settings on the right.
+## Author: Adam Rogers
+## Version: 1.0.0
+## SavedVariables: TitanUIDB
+## OptionalDeps: TitanBars, TitanFrames, TitanTools, TitanQuests, TitanMap, TitanMeter, TitanChat, TitanBags
+## IconTexture: Interface\Icons\INV_Misc_Gear_01
+
+Widgets.lua
+Window.lua
+Pages\TitanBars.lua
+Pages\TitanFrames.lua
+Pages\TitanTools.lua
+Pages\TitanQuests.lua
+Pages\TitanMap.lua
+Pages\TitanMeter.lua
+Pages\TitanChat.lua
+Pages\TitanBags.lua
+Bindings.xml

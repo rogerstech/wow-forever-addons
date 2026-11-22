@@ -1,0 +1,5 @@
+<Bindings>
+	<Binding name="TITANUI_TOGGLE" header="TITANUI">
+		TitanUI:Toggle()
+	</Binding>
+</Bindings>
