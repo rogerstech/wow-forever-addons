@@ -25,6 +25,16 @@ local function Merge(dst, src)
 	end
 end
 
+-- Gold amount with coin icons. Forever has no GetCoinTextureString; GetMoneyString
+-- (used by the repair message, which works in game) is the safe first choice.
+function TT.Money(copper)
+	copper = math.floor(tonumber(copper) or 0)
+	if GetMoneyString then return GetMoneyString(copper, true) end
+	if C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString then return C_CurrencyInfo.GetCoinTextureString(copper) end
+	if GetCoinTextureString then return GetCoinTextureString(copper) end
+	return ("%dg %ds %dc"):format(math.floor(copper / 10000), math.floor(copper / 100) % 100, copper % 100)
+end
+
 function TT:Print(msg)
 	print("|cff33ccffTitanTools|r: " .. msg)
 end

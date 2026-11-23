@@ -100,7 +100,7 @@ local function OnComplete()
 	if best then
 		-- The reward buttons are filled in after this event, so wait a frame.
 		C_Timer.After(0, function() MarkBestReward(best) end)
-		TT:Print(("Pick a reward. The gold coin marks the one that sells for most (%s)."):format(GetCoinTextureString(bestPrice)))
+		TT:Print(("Pick a reward. The gold coin marks the one that sells for most (%s)."):format(TT.Money(bestPrice)))
 	end
 end
 

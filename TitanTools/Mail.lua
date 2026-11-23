@@ -12,7 +12,7 @@ local function Stop(reason)
 	button:Enable()
 	button:SetText("Open all")
 	if reason then TT:Print(reason) end
-	if taken > 0 then TT:Print(("Took %s from the mail."):format(GetCoinTextureString(taken))) end
+	if taken > 0 then TT:Print(("Took %s from the mail."):format(TT.Money(taken))) end
 end
 
 -- Takes one thing from the first mail that has something. Returns false when done.

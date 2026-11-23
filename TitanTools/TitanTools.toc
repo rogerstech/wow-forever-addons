@@ -2,7 +2,7 @@
 ## Title: TitanTools
 ## Notes: Buff reminder (Mark of the Wild, Thorns, Omen of Clarity, paladin blessings and aura; tank form warning: Bear Form or Righteous Fury), target-of-target frame, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, open-all mail, paladin blessing helper.
 ## Author: Adam Rogers
-## Version: 1.4.0
+## Version: 1.4.1
 ## SavedVariables: TitanToolsDB
 ## IconTexture: Interface\Icons\Ability_Racial_BearForm
 
