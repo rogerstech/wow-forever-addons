@@ -446,8 +446,16 @@ function TC:OnBookPage()
 	return f and f.BookPage and f.BookPage:IsShown() or false
 end
 
+-- Fishing has no recipes to craft: leave its page to Blizzard.
+local NOT_CRAFTING = { [356] = true }
+function TC:IsCraftingProfession()
+	local p = self:ProfessionInfo()
+	return not (NOT_CRAFTING[p.professionID] or NOT_CRAFTING[p.parentProfessionID])
+end
+
 function TC:WantOurs()
 	return self.db.replace and not self.showBlizzard and not self:OnBookPage() and self:IsOwnProfession()
+		and self:IsCraftingProfession()
 end
 
 local function Park(f)

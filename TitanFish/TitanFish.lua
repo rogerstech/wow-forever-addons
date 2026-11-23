@@ -61,14 +61,27 @@ function TF:Profession()
 	end
 end
 
+-- The spell that actually casts the line. On Forever the first spell under Fishing in the
+-- spellbook opens the Fishing profession window instead, so look for a cast spell by ID:
+-- best rank first (Artisan, Expert, Journeyman, Apprentice), then the modern single spell.
+local CAST_IDS = { 18248, 7732, 7731, 7620, 131474 }
+local CAST_SET = {}
+for _, id in ipairs(CAST_IDS) do CAST_SET[id] = true end
+TF.CAST_SET = CAST_SET
+
+local function Known(id)
+	if IsPlayerSpell and IsPlayerSpell(id) then return true end
+	if C_SpellBook and C_SpellBook.IsSpellKnown then
+		local ok, k = pcall(C_SpellBook.IsSpellKnown, id)
+		if ok and k then return true end
+	end
+	return IsSpellKnown and IsSpellKnown(id) or false
+end
+
 function TF:SpellName()
-	local p = self:Profession()
-	if p and p.offset and C_SpellBook and C_SpellBook.GetSpellBookItemInfo then
-		local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player
-		local ok, info = pcall(C_SpellBook.GetSpellBookItemInfo, p.offset + 1, bank)
-		if ok and info and info.spellID then
-			local n = C_Spell.GetSpellName(info.spellID)
-			if n then return n, info.spellID end
+	for _, id in ipairs(CAST_IDS) do
+		if Known(id) then
+			return (C_Spell.GetSpellName(id) or "Fishing"), id
 		end
 	end
 	return C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(FALLBACK_SPELL) or "Fishing", FALLBACK_SPELL
@@ -292,7 +305,7 @@ function TF:UpdateSecure()
 	if InCombatLockdown() then pending = true return end
 	pending = false
 	castBtn:SetAttribute("type", "spell")
-	castBtn:SetAttribute("spell", (self:SpellName()))
+	castBtn:SetAttribute("spell", select(2, self:SpellName()))
 	local lure = self:BestLure()
 	if lure then
 		lureBtn:SetAttribute("type", "item")
@@ -426,6 +439,10 @@ SlashCmdList.TITANFISH = function(msg)
 	local cmd = strtrim(msg or ""):lower()
 	if cmd == "" then
 		TF:ToggleWindow()
+	elseif cmd == "spell" then
+		local n, id = TF:SpellName()
+		TF:Print(("casting with %s (spell %s)"):format(tostring(n), tostring(id)))
+		for _, cid in ipairs(CAST_IDS) do print(("   %d %s known=%s"):format(cid, tostring(C_Spell.GetSpellName(cid)), tostring(Known(cid)))) end
 	elseif cmd == "pole" then
 		TF:SwapPole()
 	elseif cmd == "reset" then
@@ -438,7 +455,7 @@ SlashCmdList.TITANFISH = function(msg)
 		TF:Print("catch log cleared.")
 	else
 		TF:Print("/tfish - show/hide the window   /tfish pole - swap pole and weapons")
-		print("  /tfish clear - clear this character's catch log   /tfish reset - window position")
+		print("  /tfish clear - clear this character's catch log   /tfish reset - window position   /tfish spell - which cast spell is used")
 		print("  Double-right-click the water to cast while a pole is equipped. Settings: /tui fish")
 	end
 end
@@ -475,7 +492,7 @@ ev:SetScript("OnEvent", function(_, event, a1, _, a3)
 	elseif event == "LOOT_OPENED" then
 		OnLoot()
 	elseif event == "UNIT_SPELLCAST_CHANNEL_START" then
-		if a1 == "player" and a3 == select(2, TF:SpellName()) then
+		if a1 == "player" and CAST_SET[a3] then
 			fishingUntil = GetTime() + 30
 			Boost()
 		end
