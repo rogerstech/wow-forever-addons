@@ -2,7 +2,7 @@
 ## Title: TitanCraft
 ## Notes: A faster, movable crafting window. Sorts recipes that give a skill point to the top and crafts your next skill-up in one click.
 ## Author: Adam Rogers
-## Version: 1.0.0
+## Version: 1.1.0
 ## SavedVariables: TitanCraftDB
 ## IconTexture: Interface\Icons\Trade_BlackSmithing
 

@@ -1,14 +1,16 @@
 # WoW Forever Addons
 
-Twelve addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
+Fourteen addons for **World of Warcraft: Forever** (interface `16001`, built on the 12.1.x Midnight-era UI).
 They were written against Blizzard's own Forever-branch UI source.
 
 | Addon | What it does | Command |
 |-------|--------------|---------|
 | **TitanUI** | One settings window for all of them: addons (and their pages) in a tree on the left, settings on the right. | `/tui` |
-| **TitanCraft** | A faster crafting window you can move. Sorts recipes that give a skill point to the top, crafts your next skill-up in one click, shows what you can make and what you're missing. | `/tcraft` |
+| **TitanCraft** | A faster crafting window you can move. Sorts recipes that give a skill point to the top, crafts your next skill-up in one click, shows what you can make and what you're missing, a shopping list for N crafts and a Buy missing button at vendors. | `/tcraft` |
 | **TitanUnits** | Modern player and target frames with an animated 3D face portrait, boss frames, class badge, health/mana text, target level/elite tag, target cast bar, your threat on the target and its buffs/debuffs. Plus party and raid frames for tanking: health and mana, range fading, your target outlined, and a red border on anyone who has pulled a mob off you. | `/tunits` |
 | **TitanGear** | One-click gear sets (e.g. Tank and Ret): a small bar, keys, and `/tgear Tank` for macros. | `/tgear` |
+| **TitanFish** | Fishing helper: double-right-click the water to cast, louder splash while you fish, one-click best lure with time left, pole/weapon swap, catch log, and your skill vs the zone. | `/tfish` |
+| **TitanTips** | Better tooltips: item level, which of your professions use an item, how many your other characters hold, class-coloured names and who a unit is targeting. | `/ttips` |
 | **TitanBars** | Bartender-style action bars. Hides the Blizzard bars and their art (gryphons, border, page arrows). Gives you 8 bars you can turn on/off, move, resize, set buttons per row, spacing, opacity and show/hide rules, plus hover-to-bind keys. Also moves/resizes the bag bar and menu buttons and strips their art. Optional cooldown numbers on buttons; icons turn red out of range and strong blue when you're short on mana. Info panel along the top or bottom with coordinates, zone, clock, FPS/latency, gold, durability, bag space and XP, holding the bags and menu buttons. | `/tb` |
 | **TitanTools** | Buff reminder (druid and paladin buffs) and a tank form warning (Bear Form or Righteous Fury), a target-of-target frame for tanking, nameplate aggro colours, auto-repair and junk selling, quest auto-accept and turn-in, an Open All mail button, and a paladin blessing helper (one button or key blesses the next person who needs it). | `/ttools` |
 | **TitanFrames** | Move and resize the minimap and XP bar (party and raid frames are in TitanUnits), and show map coordinates on the minimap. Viewport (shrink the game world to leave black space for your UI), an optional square, resizable minimap, and hiding the XP / reputation bars. | `/tf` |
@@ -28,7 +30,7 @@ Each addon works on its own, so install only the ones you want.
 ## Install
 
 1. Close the game.
-2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter`, `TitanChat`, `TitanBags`, `TitanCraft`, `TitanUnits`, `TitanGear` and `TitanUI` folders into
+2. Copy the `TitanBars`, `TitanFrames`, `TitanTools`, `TitanQuests`, `TitanMap`, `TitanMeter`, `TitanChat`, `TitanBags`, `TitanCraft`, `TitanUnits`, `TitanGear`, `TitanFish`, `TitanTips` and `TitanUI` folders into
    `World of Warcraft\_forever_\Interface\AddOns\`
    (Battle.net > gear icon next to Play > Show in Explorer to find it).
    Each `.toc` must sit one folder below `AddOns`, e.g. `AddOns\TitanBars\TitanBars.toc`.
@@ -301,6 +303,8 @@ appears instead of Blizzard's.
 - **Blizzard window** (title bar) switches to Blizzard's window until you close the profession,
   for specializations or anything TitanCraft doesn't show. Other players' linked professions and
   guild lists always use Blizzard's window.
+- **Shopping list:** set the number in the Create box and the reagents show how many you need for that many crafts.
+  **List** prints what's missing to chat; at a vendor, **Buy missing** buys the parts it sells (thread, vials, flux), after asking.
 - `/tcraft blizzard on` goes back to Blizzard's window for good (`off` to return). Settings are in TitanUI.
 
 ## TitanUnits
@@ -347,6 +351,29 @@ Options > Keybindings > AddOns > TitanTools) to cast it, then click again for th
 anyone with under a minute left. Which blessing each class gets is set in TitanUI > TitanTools (defaults: Might for
 warriors, rogues and hunters; Wisdom for casters; Kings for paladins and druids). Salvation is never cast on you.
 Blizzard only lets the button be prepared out of combat, so in combat it shows "In combat". Move it with `/ttools unlock`.
+
+## TitanFish
+
+Equip a fishing pole and the TitanFish window appears (or `/tfish` any time).
+
+- **Double-right-click the water to cast.** Right-click the bobber once to loot, as usual. Only works with a pole on and out of combat.
+  You can also bind keys for casting and for the lure (Esc > Options > Keybindings > AddOns > TitanFish).
+- **Loud splash:** while you fish, sound effects go up and music/ambience go off, so you hear the bobber. Your settings come back
+  when you stop fishing or take the pole off. **Auto-loot** is on while fishing too (both can be turned off).
+- **Lure button:** puts the best lure you can use on your pole, and shows the time left.
+- **Fishing pole / Weapons** button swaps your pole and weapons.
+- Shows your skill, whether this zone's fish can still get away at your skill, your next step (Journeyman, the Expert book,
+  Nat Pagle), and what you've caught in this zone. `/tfish clear` clears the log.
+
+## TitanTips
+
+Adds lines to Blizzard's tooltips:
+- **Item level** on gear.
+- **Which of your professions use an item**, learned from TitanCraft (open each profession once), or a hint for trade goods.
+- **How many your other characters have**, with bank and worn counts. Each character is remembered when you log in on it, and
+  its bank when you open it. `/ttips forget Name` drops a deleted character.
+- **Class-coloured player names** and **who a unit is targeting** ("Target: YOU" in red when it's you).
+- Optional item and spell IDs. Settings in TitanUI.
 
 ## Notes
 

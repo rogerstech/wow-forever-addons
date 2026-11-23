@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: TitanTips
+## Notes: Better tooltips: item level, which of your professions use an item, how many your other characters hold, class-coloured names and who a unit is targeting.
+## Author: Adam Rogers
+## Version: 1.0.0
+## SavedVariables: TitanTipsDB
+## OptionalDeps: TitanCraft
+## IconTexture: Interface\Icons\INV_Misc_Note_01
+
+TitanTips.lua

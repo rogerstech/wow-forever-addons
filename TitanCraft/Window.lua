@@ -70,6 +70,7 @@ function TC:Refresh()
 	self:UpdateHeader()
 	self:UpdateList()
 	self:UpdateDetail()
+	pcall(self.IndexReagents, self, all)
 end
 
 function TC:UpdateList()
@@ -236,7 +237,9 @@ function TC:UpdateDetail()
 	detail.diff:SetText(Hex(c) .. chance .. "|r")
 	detail.cat:SetText("|cff8a8a96" .. r.cat .. "|r")
 
-	-- Reagents
+	-- Reagents, for the number in the Create box (so it doubles as a shopping list).
+	local want = math.max(1, tonumber(detail.count:GetText()) or 1)
+	detail.reagentHead:SetText(want > 1 and ("Reagents for " .. want) or "Reagents")
 	local reagents = TC:Reagents(r.id)
 	for i, rg in ipairs(reagents) do
 		local line = detail.reagents[i]
@@ -253,6 +256,8 @@ function TC:UpdateDetail()
 			line.text:SetJustifyH("LEFT")
 			line.count = line:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 			line.count:SetPoint("RIGHT", -4, 0)
+			line.short = line:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+			line.short:SetPoint("LEFT", line, "RIGHT", 4, 0)
 			line:SetHighlightTexture("Interface\\Buttons\\WHITE8X8")
 			line:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.06)
 			line:SetScript("OnEnter", function(self)
@@ -273,7 +278,9 @@ function TC:UpdateDetail()
 		line.itemID = rg.itemID
 		line.icon:SetTexture((C_Item.GetItemIconByID and C_Item.GetItemIconByID(rg.itemID)) or 134400)
 		line.text:SetText((C_Item.GetItemNameByID and C_Item.GetItemNameByID(rg.itemID)) or ("item " .. rg.itemID))
-		line.count:SetText((have >= rg.need and "|cff4fd15f" or "|cffff5a4a") .. have .. "|r / " .. rg.need)
+		local need = rg.need * want
+		line.count:SetText((have >= need and "|cff4fd15f" or "|cffff5a4a") .. have .. "|r / " .. need)
+		line.short:SetText(have < need and ("|cffff5a4aneed " .. (need - have) .. "|r") or "")
 		line:Show()
 	end
 	for i = #reagents + 1, #detail.reagents do detail.reagents[i]:Hide() end
@@ -303,8 +310,12 @@ function TC:UpdateDetail()
 	detail.create:SetEnabled(r.avail > 0)
 	detail.createAll:SetEnabled(r.avail > 1 and info.canCreateMultiple ~= false)
 	detail.createAll:SetText(r.avail > 1 and ("Create all (" .. r.avail .. ")") or "Create all")
-	local n = tonumber(detail.count:GetText()) or 1
-	if n > math.max(1, r.avail) then detail.count:SetText(tostring(math.max(1, r.avail))) end
+	-- Shopping buttons: "Buy missing" only lights up at a vendor that sells something you lack.
+	local missing = TC:Missing(r.id, want)
+	detail.list:SetEnabled(#missing > 0)
+	local plan = TC:VendorPlan(missing)
+	detail.buy:SetEnabled(#plan > 0)
+	detail.buy:SetText(#plan > 0 and ("Buy missing (" .. #plan .. ")") or "Buy missing")
 end
 
 function TC:Select(id)
@@ -606,6 +617,22 @@ function TC:CreateWindow()
 	detail.reagentHead = detail:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	detail.reagentHead:SetPoint("TOPLEFT", iconBtn, "BOTTOMLEFT", 0, -16)
 	detail.reagentHead:SetText("Reagents")
+	detail.buy = Button(detail, "Buy missing", 120)
+	detail.buy:SetHeight(20)
+	detail.buy:SetPoint("LEFT", detail.reagentHead, "RIGHT", 12, 0)
+	detail.buy:SetScript("OnClick", function()
+		local r = Selected()
+		if r then TC:BuyMissing(r.id, math.max(1, tonumber(detail.count:GetText()) or 1)) end
+	end)
+	Tip(detail.buy, "Buy missing", "At a vendor: buys the reagents this vendor sells that you're short of, for the number in the Create box.")
+	detail.list = Button(detail, "List", 60)
+	detail.list:SetHeight(20)
+	detail.list:SetPoint("LEFT", detail.buy, "RIGHT", 4, 0)
+	detail.list:SetScript("OnClick", function()
+		local r = Selected()
+		if r then TC:ShoppingList(r.id, math.max(1, tonumber(detail.count:GetText()) or 1), r.name) end
+	end)
+	Tip(detail.list, "Shopping list", "Prints what you still need (with links) to chat, for the number in the Create box.")
 	detail.extra = detail:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	detail.extra:SetJustifyH("LEFT")
 	detail.extra:SetWidth(360)
@@ -631,10 +658,12 @@ function TC:CreateWindow()
 	plus:SetPoint("LEFT", count, "RIGHT", 4, 0)
 	minus:SetScript("OnClick", function() count:SetText(tostring(math.max(1, (tonumber(count:GetText()) or 1) - 1))) end)
 	plus:SetScript("OnClick", function()
-		local r = Selected()
-		local cap = r and math.max(1, r.avail) or 1
-		count:SetText(tostring(math.min(cap, (tonumber(count:GetText()) or 1) + 1)))
+		count:SetText(tostring(math.min(999, (tonumber(count:GetText()) or 1) + 1)))
 	end)
+	-- The number also drives the shopping list above, so it isn't capped at what you can make.
+	count:SetScript("OnTextChanged", function(_, user) if user then TC:UpdateDetail() end end)
+	minus:HookScript("OnClick", function() TC:UpdateDetail() end)
+	plus:HookScript("OnClick", function() TC:UpdateDetail() end)
 	detail.create = Button(detail, "Create", 90)
 	detail.create:SetPoint("LEFT", plus, "RIGHT", 10, 0)
 	detail.create:SetScript("OnClick", function()
@@ -688,7 +717,8 @@ function TC:CreateWindow()
 		TC:RequestRefresh()
 	end
 	for _, e in ipairs({ "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL_DATA_SOURCE_CHANGED", "BAG_UPDATE_DELAYED",
-		"NEW_RECIPE_LEARNED", "SKILL_LINES_CHANGED", "UNIT_SPELLCAST_SUCCEEDED", "TRADE_SKILL_ITEM_CRAFTED_RESULT" }) do
+		"NEW_RECIPE_LEARNED", "SKILL_LINES_CHANGED", "UNIT_SPELLCAST_SUCCEEDED", "TRADE_SKILL_ITEM_CRAFTED_RESULT",
+		"MERCHANT_SHOW", "MERCHANT_CLOSED", "MERCHANT_UPDATE" }) do
 		pcall(main.RegisterEvent, main, e)
 	end
 	main:SetScript("OnEvent", OnEvent)

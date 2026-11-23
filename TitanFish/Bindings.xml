@@ -1,0 +1,9 @@
+<Bindings>
+	<Binding name="CLICK TitanFishCast:LeftButton" header="TITANFISH">
+	</Binding>
+	<Binding name="CLICK TitanFishLure:LeftButton">
+	</Binding>
+	<Binding name="TITANFISH_TOGGLE">
+		TitanFish:ToggleWindow()
+	</Binding>
+</Bindings>

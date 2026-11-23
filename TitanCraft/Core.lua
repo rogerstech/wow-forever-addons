@@ -17,6 +17,8 @@ local DEFAULTS = {
 	height = 520,
 	locked = false,
 	pos = nil,           -- { x, y } top-left in screen pixels
+	confirmBuy = true,   -- ask before "Buy missing" spends gold
+	reagentUse = {},     -- [itemID] = { [profession] = recipes } (read by TitanTips)
 }
 
 TC.SORTS = {
@@ -36,7 +38,7 @@ TC.DIFF = {
 
 local function Merge(dst, src)
 	for k, v in pairs(src) do
-		if dst[k] == nil then dst[k] = v end
+		if dst[k] == nil then dst[k] = type(v) == "table" and {} or v end
 	end
 end
 
@@ -188,6 +190,109 @@ function TC:NextSkillUp(all)
 		end
 	end
 	return best
+end
+
+---------------------------------------------------------------------------
+-- Which reagents your recipes use, per profession (TitanTips shows it on item tooltips).
+local indexed = {}
+function TC:IndexReagents(all)
+	local p = self:ProfessionInfo()
+	local prof = p.parentProfessionName or p.professionName
+	if not prof or prof == "" or indexed[prof] then return end
+	indexed[prof] = true
+	local use = self.db.reagentUse
+	for _, t in pairs(use) do t[prof] = nil end
+	for _, r in ipairs(all) do
+		for _, rg in ipairs(self:Reagents(r.id)) do
+			use[rg.itemID] = use[rg.itemID] or {}
+			use[rg.itemID][prof] = (use[rg.itemID][prof] or 0) + 1
+		end
+	end
+end
+
+---------------------------------------------------------------------------
+-- Shopping: what you're short of to make `count` of a recipe, and buying the parts the
+-- open vendor sells (thread, vials, flux...).
+function TC:Missing(recipeID, count)
+	local out = {}
+	for _, rg in ipairs(self:Reagents(recipeID)) do
+		local short = rg.need * count - ItemCount(rg.itemID)
+		if short > 0 then table.insert(out, { itemID = rg.itemID, short = short }) end
+	end
+	return out
+end
+
+local function Money(c)
+	if GetMoneyString then return GetMoneyString(c, true) end
+	return ("%dg %ds %dc"):format(math.floor(c / 10000), math.floor(c / 100) % 100, c % 100)
+end
+
+-- Purchases the open vendor can cover: { {index, itemID, qty, cost, name} }, total cost.
+function TC:VendorPlan(missing)
+	local plan, total = {}, 0
+	if not (MerchantFrame and MerchantFrame:IsShown()) then return plan, 0 end
+	local want = {}
+	for _, m in ipairs(missing) do want[m.itemID] = m.short end
+	for i = 1, GetMerchantNumItems() do
+		local id = GetMerchantItemID(i)
+		local short = id and want[id]
+		if short then
+			local info = C_MerchantFrame.GetItemInfo(i)
+			if info and info.isPurchasable ~= false and not info.hasExtendedCost and (info.price or 0) > 0 then
+				local stack = math.max(1, info.stackCount or 1)
+				local qty = math.ceil(short / stack) * stack
+				local cost = info.price * qty / stack
+				table.insert(plan, { index = i, itemID = id, qty = qty, cost = cost, name = info.name or C_Item.GetItemNameByID(id) or "?" })
+				total = total + cost
+				want[id] = nil
+			end
+		end
+	end
+	return plan, total
+end
+
+local function DoBuy(plan)
+	for _, p in ipairs(plan) do
+		local left = p.qty
+		local max = math.max(1, GetMerchantItemMaxStack(p.index) or p.qty)
+		while left > 0 do
+			local n = math.min(left, max)
+			BuyMerchantItem(p.index, n)
+			left = left - n
+		end
+	end
+end
+
+StaticPopupDialogs["TITANCRAFT_BUY"] = {
+	text = "Buy %s for %s?",
+	button1 = YES, button2 = NO,
+	OnAccept = function(_, plan) DoBuy(plan) end,
+	timeout = 0, whileDead = true, hideOnEscape = true,
+}
+
+function TC:BuyMissing(recipeID, count)
+	local plan, total = self:VendorPlan(self:Missing(recipeID, count))
+	if #plan == 0 then return self:Print("this vendor doesn't sell anything you're missing.") end
+	if total > GetMoney() then return self:Print("not enough gold: that costs " .. Money(total) .. ".") end
+	local names = {}
+	for _, p in ipairs(plan) do table.insert(names, p.qty .. "x " .. p.name) end
+	if self.db.confirmBuy then
+		local d = StaticPopup_Show("TITANCRAFT_BUY", table.concat(names, ", "), Money(total))
+		if d then d.data = plan end
+	else
+		DoBuy(plan)
+		self:Print("bought " .. table.concat(names, ", ") .. " for " .. Money(total) .. ".")
+	end
+end
+
+function TC:ShoppingList(recipeID, count, name)
+	local missing = self:Missing(recipeID, count)
+	if #missing == 0 then return self:Print("you have everything for " .. count .. "x " .. name .. ".") end
+	self:Print("to make " .. count .. "x " .. name .. " you still need:")
+	for _, m in ipairs(missing) do
+		local _, link = C_Item.GetItemInfo(m.itemID)
+		print(("   %dx %s"):format(m.short, link or C_Item.GetItemNameByID(m.itemID) or ("item " .. m.itemID)))
+	end
 end
 
 function TC:Craft(recipeID, count)
