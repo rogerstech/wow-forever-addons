@@ -117,14 +117,46 @@ local function CategoryName(id)
 end
 
 -- Every learned recipe of the open profession.
+-- Blizzard's own list (Forever) reads the *filtered* recipe list and resets the filters
+-- when its window opens. Its window is hidden here, so reset them ourselves: show every
+-- learned recipe, no "makeable only", no category, slot or name filter.
+local function ResetFilters()
+	local T = C_TradeSkillUI
+	local function try(name, ...) if T[name] then pcall(T[name], ...) end end
+	try("SetShowLearned", true)
+	try("SetOnlyShowMakeableRecipes", false)
+	try("SetOnlyShowSkillUpRecipes", false)
+	try("SetOnlyShowFirstCraftRecipes", false)
+	try("ClearInventorySlotFilter")
+	try("ClearRecipeCategoryFilter")
+	try("ClearRecipeSourceTypeFilter")
+	try("SetRecipeItemNameFilter", "")
+end
+TC.ResetFilters = ResetFilters
+
+-- Recipe IDs for the open profession, the way Blizzard's list gets them.
+function TC:RecipeIDs()
+	local T = C_TradeSkillUI
+	local ids = T.GetAllRecipeIDs and T.GetAllRecipeIDs()
+	local source = "all"
+	if not ids or #ids == 0 then
+		ids = T.GetFilteredRecipeIDs and T.GetFilteredRecipeIDs() or {}
+		source = "filtered"
+	end
+	return ids, source
+end
+
 function TC:Gather()
 	local T = C_TradeSkillUI
-	local ids = (T.GetAllRecipeIDs and T.GetAllRecipeIDs()) or (T.GetFilteredRecipeIDs and T.GetFilteredRecipeIDs()) or {}
+	local ids = self:RecipeIDs()
+	local prof = self:ProfessionInfo().professionID
 	local out = {}
 	wipe(catNames)
 	for _, id in ipairs(ids) do
 		local info = T.GetRecipeInfo(id)
-		if info and info.learned and not info.isDummyRecipe and not info.isRecraft and not info.isSalvageRecipe then
+		local inLine = not prof or not T.IsRecipeInSkillLine or T.IsRecipeInSkillLine(id, prof) ~= false
+		-- "learned" is missing on some recipe data: treat missing as learned.
+		if info and info.learned ~= false and inLine and not info.isDummyRecipe and not info.isRecraft and not info.isSalvageRecipe then
 			local diff = Clean(info.relativeDifficulty, 3)
 			if info.canSkillUp == false then diff = 3 end
 			table.insert(out, {
@@ -138,7 +170,34 @@ function TC:Gather()
 			})
 		end
 	end
+	-- Recipes that only belong to a parent profession line: retry without the skill-line test.
+	if #out == 0 and prof and #ids > 0 and not self.noLineFilter then
+		self.noLineFilter = true
+		local again = self:Gather()
+		self.noLineFilter = false
+		return again
+	end
 	return out
+end
+
+-- /tcraft debug: what the game hands us, for troubleshooting an empty list.
+function TC:Debug()
+	local T = C_TradeSkillUI
+	local p = self:ProfessionInfo()
+	self:Print(("ready=%s  profession=%s (%s)  skill %s/%s"):format(tostring(T.IsTradeSkillReady and T.IsTradeSkillReady()),
+		tostring(p.professionName), tostring(p.professionID), tostring(p.skillLevel), tostring(p.maxSkillLevel)))
+	local all = T.GetAllRecipeIDs and T.GetAllRecipeIDs()
+	local filtered = T.GetFilteredRecipeIDs and T.GetFilteredRecipeIDs()
+	self:Print(("GetAllRecipeIDs: %s   GetFilteredRecipeIDs: %s"):format(
+		T.GetAllRecipeIDs and (all and #all or "nil") or "missing", T.GetFilteredRecipeIDs and (filtered and #filtered or "nil") or "missing"))
+	local ok, list = pcall(self.Gather, self)
+	self:Print("recipes TitanCraft keeps: " .. (ok and #list or ("error: " .. tostring(list))))
+	local first = (all and all[1]) or (filtered and filtered[1])
+	if first then
+		local info = T.GetRecipeInfo(first)
+		self:Print(("first recipe %s: %s  learned=%s  inLine=%s"):format(first, tostring(info and info.name), tostring(info and info.learned),
+			tostring(T.IsRecipeInSkillLine and p.professionID and T.IsRecipeInSkillLine(first, p.professionID))))
+	end
 end
 
 local function ByName(a, b) return a.name < b.name end
@@ -385,6 +444,8 @@ SlashCmdList.TITANCRAFT = function(msg)
 	elseif cmd == "reset" then
 		db.pos, db.height = nil, DEFAULTS.height
 		TC:PlaceWindow()
+	elseif cmd == "debug" then
+		TC:Debug()
 	elseif cmd == "settings" and _G.TitanUI then
 		_G.TitanUI:Open("TitanCraft")
 	else
@@ -392,6 +453,7 @@ SlashCmdList.TITANCRAFT = function(msg)
 		print("  /tcraft blizzard on|off - use Blizzard's window instead (on) or TitanCraft (off)")
 		print("  /tcraft reset - window back to the middle of the screen")
 		print("  /tcraft settings - TitanCraft's page in TitanUI")
+		print("  /tcraft debug - show what the game returns (if the recipe list is empty)")
 	end
 end
 
@@ -415,6 +477,7 @@ ev:SetScript("OnEvent", function(_, event, name)
 		TC:HookBlizzard()
 	else
 		if event == "TRADE_SKILL_CLOSE" then TC.showBlizzard = false end
+		TC.filtersReset = false
 		TC:HookBlizzard()
 		TC:PlaceBlizzard()
 		C_Timer.After(0, function() TC:Sync() end)

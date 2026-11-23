@@ -61,10 +61,16 @@ function TC:Refresh()
 	if not main or not main:IsShown() then return end
 	if not (C_TradeSkillUI.IsTradeSkillReady and C_TradeSkillUI.IsTradeSkillReady()) then
 		main.status:SetText("Loading recipes...")
+		-- Not every client sends an event when it's ready: look again shortly.
+		C_Timer.After(0.5, function() TC:RequestRefresh() end)
 		return
 	end
-	main.status:SetText("")
+	if not self.filtersReset then
+		self.filtersReset = true
+		self.ResetFilters()
+	end
 	local ok, res = pcall(self.Gather, self)
+	main.status:SetText((ok and #res == 0) and "No recipes found. Type /tcraft debug and send the result." or "")
 	all = ok and res or {}
 	if not ok then self:Print("error reading recipes: " .. tostring(res)) end
 	self:UpdateHeader()
@@ -701,6 +707,7 @@ function TC:CreateWindow()
 	end)
 
 	main:SetScript("OnShow", function()
+		TC.filtersReset = false
 		TC:PlaceWindow()
 		main.UpdateSort()
 		for _, c in ipairs(main.checks) do c:SetChecked(TC.db[c.key]) end
