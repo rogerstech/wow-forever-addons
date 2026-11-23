@@ -237,8 +237,8 @@ function TC:Debug()
 		add("C_TradeSkillUI is missing on this client")
 	else
 		local p = self:ProfessionInfo()
-		add(("ready=%s  profession=%s (%s)  skill %s/%s  own=%s"):format(tostring(T.IsTradeSkillReady and T.IsTradeSkillReady()),
-			tostring(p.professionName), tostring(p.professionID), tostring(p.skillLevel), tostring(p.maxSkillLevel), tostring(self:IsOwnProfession())))
+		add(("ready=%s  profession=%s (%s)  skill %s/%s  own=%s  bookPage=%s"):format(tostring(T.IsTradeSkillReady and T.IsTradeSkillReady()),
+			tostring(p.professionName), tostring(p.professionID), tostring(p.skillLevel), tostring(p.maxSkillLevel), tostring(self:IsOwnProfession()), tostring(self:OnBookPage())))
 		local all = T.GetAllRecipeIDs and T.GetAllRecipeIDs()
 		local filtered = T.GetFilteredRecipeIDs and T.GetFilteredRecipeIDs()
 		add(("GetAllRecipeIDs: %s   GetFilteredRecipeIDs: %s"):format(
@@ -438,8 +438,16 @@ end
 local parked = false
 TC.showBlizzard = false   -- "Blizzard window" button, until the profession closes
 
+-- Forever's profession window is also the Professions *book* (overview page with a tab
+-- per profession). No profession is open there yet, and its tabs are how you open one,
+-- so leave Blizzard's window alone until a profession's crafting page is up.
+function TC:OnBookPage()
+	local f = ProfessionsFrame
+	return f and f.BookPage and f.BookPage:IsShown() or false
+end
+
 function TC:WantOurs()
-	return self.db.replace and not self.showBlizzard and self:IsOwnProfession()
+	return self.db.replace and not self.showBlizzard and not self:OnBookPage() and self:IsOwnProfession()
 end
 
 local function Park(f)
@@ -482,6 +490,13 @@ function TC:HookBlizzard()
 	hooksecurefunc(f, "Show", Later)
 	hooksecurefunc(f, "Hide", Later)
 	hooksecurefunc(f, "SetShown", Later)
+	-- Book page <-> crafting page switches inside the open window.
+	for _, page in ipairs({ f.BookPage, f.CraftingPage }) do
+		if page then
+			page:HookScript("OnShow", Later)
+			page:HookScript("OnHide", Later)
+		end
+	end
 	self:PlaceBlizzard()
 end
 
