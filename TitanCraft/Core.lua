@@ -1,7 +1,7 @@
 -- TitanCraft: saved settings, recipe data, hiding Blizzard's profession window.
 --
 -- How the swap works: when you open a profession the game still opens Blizzard's
--- profession window as normal; TitanCraft only moves that window into an invisible parent,
+-- profession window as normal; TitanCraft only makes that window invisible and off-screen,
 -- so the profession stays open and every crafting call works, and shows its own window
 -- instead. Closing ours closes the profession. Viewing someone else's linked profession,
 -- a guild list or an NPC crafter leaves Blizzard's window alone.
@@ -181,23 +181,90 @@ function TC:Gather()
 end
 
 -- /tcraft debug: what the game hands us, for troubleshooting an empty list.
+-- Shown in a box with the text selected (chat can't be copied), and saved in
+-- TitanCraftDB.lastDebug.
+local copyBox
+local function ShowCopyBox(text)
+	if not copyBox then
+		local f = CreateFrame("Frame", "TitanCraftCopyBox", UIParent, "BackdropTemplate")
+		f:SetSize(520, 240)
+		f:SetPoint("CENTER")
+		f:SetFrameStrata("DIALOG")
+		f:SetMovable(true)
+		f:EnableMouse(true)
+		f:RegisterForDrag("LeftButton")
+		f:SetScript("OnDragStart", f.StartMoving)
+		f:SetScript("OnDragStop", f.StopMovingOrSizing)
+		f:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+		f:SetBackdropColor(0.05, 0.05, 0.07, 0.95)
+		f:SetBackdropBorderColor(0.2, 0.6, 1, 1)
+		local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		title:SetPoint("TOPLEFT", 8, -6)
+		title:SetText("TitanCraft debug - press Ctrl+C to copy, then Esc")
+		local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+		close:SetPoint("TOPRIGHT", -2, -2)
+		local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+		scroll:SetPoint("TOPLEFT", 8, -28)
+		scroll:SetPoint("BOTTOMRIGHT", -28, 8)
+		local eb = CreateFrame("EditBox", nil, scroll)
+		eb:SetMultiLine(true)
+		eb:SetAutoFocus(false)
+		eb:SetFontObject(ChatFontNormal)
+		eb:SetWidth(480)
+		eb:SetScript("OnEscapePressed", function() f:Hide() end)
+		-- Read-only: typing puts the original text back.
+		eb:SetScript("OnTextChanged", function(self, user)
+			if user then self:SetText(f.text or ""); self:HighlightText() end
+		end)
+		scroll:SetScrollChild(eb)
+		f.eb = eb
+		copyBox = f
+	end
+	copyBox.text = text
+	copyBox:Show()
+	copyBox.eb:SetText(text)
+	copyBox.eb:SetFocus()
+	copyBox.eb:HighlightText()
+end
+
 function TC:Debug()
 	local T = C_TradeSkillUI
-	local p = self:ProfessionInfo()
-	self:Print(("ready=%s  profession=%s (%s)  skill %s/%s"):format(tostring(T.IsTradeSkillReady and T.IsTradeSkillReady()),
-		tostring(p.professionName), tostring(p.professionID), tostring(p.skillLevel), tostring(p.maxSkillLevel)))
-	local all = T.GetAllRecipeIDs and T.GetAllRecipeIDs()
-	local filtered = T.GetFilteredRecipeIDs and T.GetFilteredRecipeIDs()
-	self:Print(("GetAllRecipeIDs: %s   GetFilteredRecipeIDs: %s"):format(
-		T.GetAllRecipeIDs and (all and #all or "nil") or "missing", T.GetFilteredRecipeIDs and (filtered and #filtered or "nil") or "missing"))
-	local ok, list = pcall(self.Gather, self)
-	self:Print("recipes TitanCraft keeps: " .. (ok and #list or ("error: " .. tostring(list))))
-	local first = (all and all[1]) or (filtered and filtered[1])
-	if first then
-		local info = T.GetRecipeInfo(first)
-		self:Print(("first recipe %s: %s  learned=%s  inLine=%s"):format(first, tostring(info and info.name), tostring(info and info.learned),
-			tostring(T.IsRecipeInSkillLine and p.professionID and T.IsRecipeInSkillLine(first, p.professionID))))
+	local lines = {}
+	local function add(s) table.insert(lines, s); self:Print(s) end
+	add("TitanCraft " .. tostring(C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata(ADDON, "Version")
+		or (GetAddOnMetadata and GetAddOnMetadata(ADDON, "Version"))) .. "  client " .. tostring((select(4, GetBuildInfo()))))
+	if not T then
+		add("C_TradeSkillUI is missing on this client")
+	else
+		local p = self:ProfessionInfo()
+		add(("ready=%s  profession=%s (%s)  skill %s/%s  own=%s"):format(tostring(T.IsTradeSkillReady and T.IsTradeSkillReady()),
+			tostring(p.professionName), tostring(p.professionID), tostring(p.skillLevel), tostring(p.maxSkillLevel), tostring(self:IsOwnProfession())))
+		local all = T.GetAllRecipeIDs and T.GetAllRecipeIDs()
+		local filtered = T.GetFilteredRecipeIDs and T.GetFilteredRecipeIDs()
+		add(("GetAllRecipeIDs: %s   GetFilteredRecipeIDs: %s"):format(
+			T.GetAllRecipeIDs and (all and #all or "nil") or "missing", T.GetFilteredRecipeIDs and (filtered and #filtered or "nil") or "missing"))
+		local ok, list = pcall(self.Gather, self)
+		add("recipes TitanCraft keeps: " .. (ok and #list or ("error: " .. tostring(list))))
+		local first = (all and all[1]) or (filtered and filtered[1])
+		if first then
+			local info = T.GetRecipeInfo(first)
+			add(("first recipe %s: %s  learned=%s  inLine=%s  dummy=%s  recraft=%s"):format(first, tostring(info and info.name), tostring(info and info.learned),
+				tostring(T.IsRecipeInSkillLine and p.professionID and T.IsRecipeInSkillLine(first, p.professionID)),
+				tostring(info and info.isDummyRecipe), tostring(info and info.isRecraft)))
+		end
 	end
+	-- Old-style trade skill API (some classic clients use only this).
+	if GetNumTradeSkills then
+		local ok, n = pcall(GetNumTradeSkills)
+		add("GetNumTradeSkills: " .. tostring(ok and n or "error"))
+	else
+		add("GetNumTradeSkills: missing")
+	end
+	add("ProfessionsFrame=" .. tostring(ProfessionsFrame ~= nil) .. "  TradeSkillFrame=" .. tostring(TradeSkillFrame ~= nil)
+		.. "  TitanCraft window shown=" .. tostring(TitanCraftFrame and TitanCraftFrame:IsShown() or false))
+	local text = table.concat(lines, "\n")
+	if self.db then self.db.lastDebug = text end
+	ShowCopyBox(text)
 end
 
 local function ByName(a, b) return a.name < b.name end
@@ -365,26 +432,45 @@ end
 
 ---------------------------------------------------------------------------
 -- Blizzard's window
-local hidden = CreateFrame("Frame")
-hidden:Hide()
-local blizzParent
+-- It must stay *shown*: its OnHide ends the profession session (CloseTradeSkill),
+-- which empties every recipe call. So instead of hiding it, it's made invisible and
+-- parked off-screen while TitanCraft is in use.
+local parked = false
 TC.showBlizzard = false   -- "Blizzard window" button, until the profession closes
 
 function TC:WantOurs()
 	return self.db.replace and not self.showBlizzard and self:IsOwnProfession()
 end
 
+local function Park(f)
+	f:SetAlpha(0)
+	f:SetClampedToScreen(false)
+	f:ClearAllPoints()
+	f:SetPoint("TOPLEFT", UIParent, "BOTTOMRIGHT", 4000, -4000)
+end
+
 function TC:PlaceBlizzard()
 	local f = ProfessionsFrame
 	if not f then return end
 	if self:WantOurs() then
-		if f:GetParent() ~= hidden then
-			blizzParent = blizzParent or f:GetParent()
-			f:SetParent(hidden)
+		parked = true
+		Park(f)
+	elseif parked then
+		parked = false
+		f:SetAlpha(1)
+		f:ClearAllPoints()
+		if UpdateUIPanelPositions then
+			pcall(UpdateUIPanelPositions, f)
 		end
-	elseif f:GetParent() == hidden then
-		f:SetParent(blizzParent or UIParent)
+		if f:GetNumPoints() == 0 then f:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -116) end
 	end
+end
+
+-- The game re-positions open panels (when another panel opens, etc.): park it again.
+if UpdateUIPanelPositions then
+	hooksecurefunc("UpdateUIPanelPositions", function()
+		if parked and ProfessionsFrame and ProfessionsFrame:IsShown() then Park(ProfessionsFrame) end
+	end)
 end
 
 local hooked = false
