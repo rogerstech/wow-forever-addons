@@ -2,7 +2,7 @@
 ## Title: TitanFish
 ## Notes: Fishing helper: double-right-click to cast, louder splash, one-click lures, pole swap, catch log, and your skill vs the zone.
 ## Author: Adam Rogers
-## Version: 1.0.0
+## Version: 1.0.1
 ## SavedVariables: TitanFishDB
 ## IconTexture: Interface\Icons\Trade_Fishing
 

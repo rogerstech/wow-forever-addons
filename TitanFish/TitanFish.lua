@@ -366,7 +366,9 @@ function TF:CreateWindow()
 	-- Lure button (secure: using an item on your pole is a protected action).
 	lureBtn = CreateFrame("Button", "TitanFishLure", win, "SecureActionButtonTemplate")
 	lureBtn:SetSize(26, 26)
-	lureBtn:SetPoint("TOPLEFT", win.next, "BOTTOMLEFT", 0, -6)
+	-- Protected frames may only anchor to frames, never to font strings or
+	-- textures, so this sits on the window itself (just under win.next).
+	lureBtn:SetPoint("TOPLEFT", win, "TOPLEFT", 8, -79)
 	lureBtn:RegisterForClicks("AnyUp", "AnyDown")
 	lureBtn:SetAttribute("useOnKeyDown", false)
 	lureBtn.icon = lureBtn:CreateTexture(nil, "ARTWORK")
